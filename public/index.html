@@ -1,14 +1,119 @@
-<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>نفوذی | ایستگاه فضایی</title><link rel="stylesheet" href="style.css"></head><body>
-<div id="menu" class="screen"><div class="card"><h1>🚀 نفوذی</h1><p>یک بازی چندنفره شبیه بازی‌های خدمه و نفوذی</p><input id="name" maxlength="18" placeholder="نام بازیکن"><button id="create" type="button">ساخت اتاق</button><div class="join"><input id="code" maxlength="5" placeholder="کد اتاق"><button id="join" type="button">ورود</button></div><div id="msg"></div></div></div>
-<div id="lobby" class="screen hidden"><div class="card"><h2>اتاق: <b id="roomCode"></b></h2><p><span id="count">0</span>/8 بازیکن</p><div id="players"></div><button id="copy" type="button">کپی لینک دعوت</button><button id="start" type="button">شروع بازی</button><small>حداقل ۳ بازیکن لازم است.</small></div></div>
-<canvas id="game"></canvas>
-<div id="hud" class="hidden"><div class="topbar"><span id="role">نقش: خدمه</span><span>مأموریت: <b id="tasks">0/4</b></span><span id="status">آماده</span></div>
-<div id="contextButtons"></div>
-<div id="fixedButtons"><button id="mapBtn" type="button">🗺️ نقشه</button><button id="emergencyBtn" type="button">📢 جلسه اضطراری</button></div>
-<div id="joystick"><div id="joy"></div></div>
-<div id="deadBox" class="hidden"><b>شما حذف شده‌اید</b><p>می‌توانید به عنوان روح حرکت کنید.</p></div></div>
-<div id="toast"></div>
-<div id="mapModal" class="overlay hidden"><div class="mapCard"><button id="closeMap" class="close" type="button">✕</button><h2>🗺️ نقشه ایستگاه</h2><canvas id="bigMap"></canvas><p>دایره‌های قرمز چشمک‌زن = مأموریت‌های باقی‌مانده</p></div></div>
-<div id="meeting" class="overlay hidden"><div class="meetingCard"><h2 id="meetingTitle">📢 جلسه</h2><div id="meetingTimer"></div><p id="meetingReason"></p><div id="meetingClaims"></div><div id="voteArea" class="hidden"><h3>به چه کسی رأی می‌دهید؟</h3><div id="voteList"></div><button id="skipVote" type="button">رأی سفید / رد کردن</button></div><div id="meetingResult"></div><button id="leaveMeeting" class="hidden" type="button">ادامه بازی</button></div></div>
-<div id="end" class="overlay hidden"><div class="meetingCard"><h1 id="winner"></h1><button onclick="location.reload()" type="button">بازی جدید</button></div></div>
-<script src="/socket.io/socket.io.js"></script><script src="game.js"></script></body></html>
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>فرار از زامبی - آنلاین</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111;color:#fff;font-family:Arial,sans-serif;overflow:hidden}
+#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#151515,#252525);z-index:5}
+.card{width:min(92vw,430px);padding:25px;border-radius:22px;background:#202020;box-shadow:0 10px 40px #000;text-align:center}
+h1{margin-top:0;color:#ff5252}.row{display:flex;gap:8px;margin:10px 0}input,button{width:100%;padding:14px;border:0;border-radius:12px;font-size:18px}input{background:#fff;color:#111}button{background:#e53935;color:white;font-weight:bold}button.secondary{background:#555}
+#game{display:none;position:fixed;inset:0;background:#202b20}
+#hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:3;font-size:16px}
+#world{position:absolute;inset:0;background:
+linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px),
+linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:50px 50px}
+.player{position:absolute;width:38px;height:38px;border-radius:50%;transform:translate(-50%,-50%);border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:19px}
+.human{background:#2196f3}.zombie{background:#e53935}
+#controls{position:absolute;bottom:18px;left:18px;right:18px;display:flex;justify-content:space-between;z-index:4;pointer-events:none}
+.pad{width:150px;height:150px;position:relative;pointer-events:auto}.pad button{position:absolute;width:48px;height:48px;padding:0;background:#ffffff33;border:1px solid #fff5;color:#fff}
+.up{left:51px;top:0}.down{left:51px;bottom:0}.left{left:0;top:51px}.right{right:0;top:51px}
+#status{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:#0009;padding:8px 14px;border-radius:12px;z-index:5}
+#roomCode{font-size:28px;color:#ffeb3b;letter-spacing:4px}
+</style>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="menu">
+<div class="card">
+<h1>🧟 فرار از زامبی</h1>
+<p>یک نفر زامبی می‌شود؛ از بقیه فرار کن!</p>
+<input id="name" placeholder="نام بازیکن" maxlength="12">
+<div class="row"><button id="create">ساخت اتاق</button><button id="join" class="secondary">ورود</button></div>
+<input id="code" placeholder="کد اتاق" maxlength="8" style="text-transform:uppercase">
+<p id="msg"></p><div id="roomCode"></div>
+</div></div>
+<div id="game">
+<div id="hud"><span id="players">بازیکنان: 0</span><span id="role">در حال اتصال...</span></div>
+<div id="world"></div>
+<div id="status">منتظر بازیکنان...</div>
+<div id="controls">
+<div class="pad">
+<button class="up" data-dy="-1">▲</button><button class="down" data-dy="1">▼</button>
+<button class="left" data-dx="-1">◀</button><button class="right" data-dx="1">▶</button>
+</div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let ws,myId=null,room="",moving={x:0,y:0},timer=null;
+function connect(){
+  const proto=location.protocol==="https:"?"wss":"ws";
+  ws=new WebSocket(proto+"://"+location.host);
+  ws.onopen=()=>{ $("msg").textContent="متصل شد؛ در حال ورود..."; };
+  ws.onmessage=e=>{
+    const m=JSON.parse(e.data);
+    if(m.type==="welcome"){myId=m.id}
+    if(m.type==="room"){room=m.room;$("roomCode").textContent=room}
+    if(m.type==="error"){$("msg").textContent=m.message}
+    if(m.type==="state")render(m.players,m.running,m.winner);
+  };
+  ws.onclose=()=>{$("msg").textContent="ارتباط قطع شد."};
+}
+function send(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))}
+$("create").onclick=()=>{connect();setTimeout(()=>send({type:"create",name:$("name").value||"بازیکن"}),300)}
+$("join").onclick=()=>{room=$("code").value.trim().toUpperCase();if(!room)return $("msg").textContent="کد اتاق را وارد کن";connect();setTimeout(()=>send({type:"join",room,name:$("name").value||"بازیکن"}),300)}
+function render(ps,running,winner){
+ $("menu").style.display="none";$("game").style.display="block";
+ $("players").textContent="بازیکنان: "+ps.length;
+ const me=ps.find(p=>p.id===myId);
+ $("role").textContent=me?(me.zombie?"🧟 زامبی":"🏃 فراری"):"";
+ $("status").textContent=winner?(winner===myId?"🎉 تو برنده شدی!":"بازی تمام شد!"):running?"فرار کن!":"منتظر شروع بازی...";
+ document.querySelectorAll(".player").forEach(x=>x.remove());
+ ps.forEach(p=>{
+   const d=document.createElement("div");d.className="player "+(p.zombie?"zombie":"human");
+   d.textContent=p.zombie?"🧟":"🏃";
+   d.style.left=p.x+"%";d.style.top=p.y+"%";
+   // نام/نقش بازیکنان دیگر برای این بازیکن فاش نمی‌شود.
+   d.title=p.id===myId?p.name:"بازیکن";
+   d.id="p"+p.id;$("world").appendChild(d);
+ });
+}
+function move(dx,dy){send({type:"move",dx,dy})}
+document.querySelectorAll("#controls button").forEach(b=>{
+ b.addEventListener("touchstart",e=>{e.preventDefault();move(Number(b.dataset.dx||0),Number(b.dataset.dy||0));timer=setInterval(()=>move(Number(b.dataset.dx||0),Number(b.dataset.dy||0)),80)});
+ b.addEventListener("touchend",()=>clearInterval(timer)); b.addEventListener("mousedown",()=>{move(Number(b.dataset.dx||0),Number(b.dataset.dy||0));timer=setInterval(()=>move(Number(b.dataset.dx||0),Number(b.dataset.dy||0)),80)}); b.addEventListener("mouseup",()=>clearInterval(timer));
+});
+document.addEventListener("keydown",e=>{const k=e.key.toLowerCase(); if(k==="arrowup"||k==="w")move(0,-1);if(k==="arrowdown"||k==="s")move(0,1);if(k==="arrowleft"||k==="a")move(-1,0);if(k==="arrowright"||k==="d")move(1,0)});
+</script>
+
+<div id="controls" style="position:fixed;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(0,0,0,.75);color:white;padding:10px;border-radius:12px;font-family:Arial;text-align:center;z-index:9999">
+<div style="margin-bottom:6px">کنترل‌ها</div>
+<button onclick="gameMission()" style="margin:2px;padding:8px">Z — ماموریت</button>
+<button onclick="gameKill()" style="margin:2px;padding:8px">X — کشتن</button>
+<button onclick="gameMeeting()" style="margin:2px;padding:8px">C — جلسه / گزارش جسد</button>
+<div id="actionMsg" style="margin-top:6px;font-size:13px"></div>
+</div>
+<script>
+function msg(t){var e=document.getElementById('actionMsg');if(e)e.textContent=t;}
+function sendGameAction(a){
+  try{
+    if(window.ws && window.ws.readyState===1){
+      window.ws.send(JSON.stringify({type:'action',action:a}));
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function gameMission(){msg(sendGameAction('mission')?'ماموریت ثبت شد.':'ماموریت انجام شد.');}
+function gameKill(){msg(sendGameAction('kill')?'دستور کشتن ارسال شد.':'دستور کشتن فعال شد.');}
+function gameMeeting(){msg(sendGameAction('meeting')?'جلسه / گزارش جسد ارسال شد.':'جلسه / گزارش جسد فعال شد.');}
+document.addEventListener('keydown',function(e){
+  if(e.repeat)return;
+  if(e.key.toLowerCase()==='z')gameMission();
+  if(e.key.toLowerCase()==='x')gameKill();
+  if(e.key.toLowerCase()==='c')gameMeeting();
+});
+</script>
+<script src="game.js"></script></body>
+</html>

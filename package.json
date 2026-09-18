@@ -1,1 +1,7 @@
-{"name":"space-mystery-infiltrator","version":"1.2.0","main":"server.js","scripts":{"start":"node server.js"},"dependencies":{"express":"^4.21.2","socket.io":"^4.8.1"}}
+{
+  "name":"zombie-escape-online",
+  "version":"1.0.0",
+  "private":true,
+  "scripts":{"start":"node server.js"},
+  "dependencies":{"ws":"^8.18.0"}
+}
