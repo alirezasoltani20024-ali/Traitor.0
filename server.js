@@ -3,7 +3,7 @@ const fs=require("fs");
 const path=require("path");
 const {WebSocketServer}=require("ws");
 
-const PORT=process.env.PORT||3000;
+const PORT = process.env.PORT || 3000;
 const server=http.createServer((req,res)=>{
   if(req.url==="/"||req.url==="/index.html"){
     res.writeHead(200,{"Content-Type":"text/html; charset=utf-8"});
