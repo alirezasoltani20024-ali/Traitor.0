@@ -1,13 +1,14 @@
 const socket=io();const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),bigMap=$('bigMap'),bctx=bigMap.getContext('2d');let myId=null,room='',players=[],me=null,role='crew',partners=[],tasksDone=[],sabotages=[],meeting=null,keys={},joy={x:0,y:0},mapOpen=false,sabotageOpen=false,roleTimer=0;const W=2400,H=1600,vision=9999;
-const T=[{id:'card',x:470,y:290,name:'کارت دسترسی',room:'کافه'},{id:'wires',x:790,y:690,name:'سیم‌کشی',room:'برق'},{id:'reactor',x:350,y:1320,name:'راکتور',room:'راکتور'},{id:'comms',x:2050,y:290,name:'تنظیم ارتباطات',room:'ارتباطات'},{id:'fuel',x:350,y:720,name:'سوخت موتور',room:'موتور'},{id:'med',x:2050,y:1320,name:'اسکن پزشکی',room:'درمانگاه'},{id:'nav',x:1570,y:290,name:'هدایت سفینه',room:'ناوبری'}];
-const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];const table={x:1200,y:800};
+const T=[{id:'card',x:470,y:290,name:'کارت دسترسی',room:'کافه',kind:'card'},{id:'wires',x:790,y:690,name:'سیم‌کشی برق',room:'برق',kind:'wires'},{id:'oxygen',x:2050,y:650,name:'رفع نشتی اکسیژن',room:'اکسیژن',kind:'oxygen'},{id:'mines',x:2050,y:290,name:'حدس مین',room:'ارتباطات',kind:'mines'},{id:'data',x:1570,y:290,name:'دریافت فایل',room:'ناوبری',kind:'data'},{id:'reactor',x:350,y:1320,name:'راکتور',room:'راکتور',kind:'reactor'},{id:'comms',x:2050,y:400,name:'تنظیم ارتباطات',room:'ارتباطات',kind:'comms'},{id:'fuel',x:350,y:720,name:'سوخت موتور',room:'موتور',kind:'fuel'},{id:'med',x:2050,y:1320,name:'اسکن پزشکی',room:'درمانگاه',kind:'med'},{id:'nav',x:1570,y:400,name:'هدایت سفینه',room:'ناوبری',kind:'nav'}];
+const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];const wallRects=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
+const table={x:1200,y:800};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
 function resize(){canvas.width=innerWidth*devicePixelRatio;canvas.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);bigMap.width=bigMap.clientWidth*devicePixelRatio;bigMap.height=bigMap.clientHeight*devicePixelRatio;bctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}addEventListener('resize',resize);resize();
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2300)}function nm(){return($('name').value.trim()||'بازیکن').slice(0,18)}function showLobby(c){room=c;$('menu').classList.add('hidden');$('lobby').classList.remove('hidden');$('roomCode').textContent=c}
 $('create').onclick=()=>socket.emit('createRoom',{name:nm()});$('join').onclick=()=>{const c=$('code').value.trim().toUpperCase();if(c.length<5){$('msg').textContent='کد اتاق را وارد کنید.';return}socket.emit('joinRoom',{name:nm(),code:c})};$('start').onclick=()=>socket.emit('startGame');$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/?room='+room);toast('لینک دعوت کپی شد')}catch(e){toast(location.origin+'/?room='+room)}};
 socket.on('connect',()=>myId=socket.id);socket.on('connect_error',()=>{$('msg').textContent='ارتباط با سرور برقرار نشد.'});socket.on('roomCreated',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('joined',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('errorMsg',t=>$('msg').textContent=t);socket.on('gameStarted',()=>{$('lobby').classList.add('hidden');$('hud').classList.remove('hidden');toast('بازی شروع شد')});
 socket.on('roleSecret',d=>{role=d.role;partners=d.partners||[];$('role').textContent=role==='infiltrator'?'نقش: 🔴 خائن':'نقش: 🔵 خدمه';roleTimer=performance.now()+2000;if(role==='infiltrator')$('status').textContent=partners.length?'۲ خائن در بازی هستند':'خائن در بازی است';else $('status').textContent='خدمه؛ مأموریت‌ها را انجام بده'});
-socket.on('state',s=>{players=s.players;me=players.find(p=>p.id===myId)||me;tasksDone=s.tasksDone||[];sabotages=s.sabotages||[];meeting=s.meeting||null;$('count').textContent=players.length;$('tasks').textContent=tasksDone.length+'/'+T.length;if(me&&!me.alive)$('deadBox').classList.remove('hidden');if(s.ended){$('end').classList.remove('hidden');$('winner').textContent=s.winner==='crew'?'🎉 خدمه برنده شدند!':'🔪 خائن برنده شد!'}renderContext()});
+socket.on('state',s=>{players=s.players;me=players.find(p=>p.id===myId)||me;tasksDone=s.tasksDone||[];sabotages=s.sabotages||[];meeting=s.meeting||null;$('count').textContent=players.length;$('tasks').textContent=tasksDone.length+'/'+T.length;if(me&&!me.alive)$('deadBox').classList.remove('hidden');if(s.ended){$('meeting').classList.add('hidden');$('end').classList.remove('hidden');$('winner').textContent=s.winner==='crew'?'🎉 خدمه برنده شدند!':'🔪 خائن برنده شد!';$('status').textContent=s.winner==='crew'?'پایان بازی — خدمه':'پایان بازی — خائن'}renderContext()});
 socket.on('killed',d=>toast('💀 '+d.victimName+' کشته شد — نقش: '+d.revealedRole));socket.on('notice',toast);
 socket.on('meetingStart',d=>openMeeting('talk',d.endAt,d.reason,d.by));socket.on('meetingVote',d=>openMeeting('vote',d.endAt,'زمان رأی‌گیری',''));socket.on('meetingResult',d=>showMeetingResult(d));socket.on('voteAccepted',()=>toast('رأی شما ثبت شد'));
 function openMeeting(phase,endAt,reason,by){$('meeting').classList.remove('hidden');$('meetingTitle').textContent=phase==='talk'?'📢 جلسه — زمان صحبت':'🗳️ رأی‌گیری';$('meetingReason').textContent=reason+(by?' توسط '+by:'');$('voteArea').classList.toggle('hidden',phase!=='vote');$('leaveMeeting').classList.add('hidden');$('meetingResult').innerHTML='';$('meetingClaims').innerHTML='';if(phase==='vote')buildVotes();tickMeeting(endAt,phase)}function tickMeeting(endAt,phase){clearInterval(window.meetTick);window.meetTick=setInterval(()=>{const sec=Math.max(0,Math.ceil((endAt-Date.now())/1000));$('meetingTimer').textContent=sec+' ثانیه';if(sec<=0){clearInterval(window.meetTick);if(phase==='talk')toast('وقت صحبت تمام شد؛ رأی بدهید')}},100);buildVotes()}
@@ -36,31 +37,33 @@ function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHe
     ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('!',t.x,t.y+5);
     ctx.fillStyle='#7b2430';ctx.font='bold 12px Tahoma';ctx.fillText(t.name,t.x,t.y+31);ctx.restore();
   }
-});players.forEach(p=>{drawPlayer(p)});ctx.restore();renderContext();if(mapOpen)drawBigMap()}
+});players.forEach(p=>{drawPlayer(p)});ctx.restore();if(!window._ctxStamp||performance.now()-window._ctxStamp>100){window._ctxStamp=performance.now();renderContext()}if(mapOpen&&(!window._mapStamp||performance.now()-window._mapStamp>180)){window._mapStamp=performance.now();drawBigMap()}}
 
 const missionHelp={
-card:["کارت دسترسی","به دستگاه کارت دسترسی برو.","کارت را از سمت چپ به راست بکش تا نوار سبز شود."],
-wires:["سیم‌کشی","سیم‌های هم‌رنگ را به هم وصل کن.","هر سیم را بگیر و به سیم هم‌رنگ در طرف مقابل وصل کن."],
-lights:["تنظیم برق","برق این بخش را دوباره فعال کن.","کلیدهای خاموش را روشن کن تا همه چراغ‌ها فعال شوند."],
-fuel:["سوخت موتور","مخزن موتور را پر کن.","اهرم انتقال سوخت را فعال کن و تا پر شدن مخزن صبر کن."],
-engine:["راه‌اندازی موتور","موتور را دوباره روشن کن.","کلیدها را به ترتیب فعال کن و سپس START را بزن."],
-reactor:["راکتور","راکتور را پایدار کن.","عددها را به ترتیب درست فشار بده."],
-comms:["ارتباطات","ارتباط رادیویی را تنظیم کن.","موج‌ها را روی نقطه سبز قرار بده."],
-oxygen:["اکسیژن","فیلتر اکسیژن را پاک‌سازی کن.","ذرات قرمز را بگیر و داخل خروجی بینداز."],
-med:["اسکن پزشکی","نمونه را اسکن کن.","نمونه را داخل اسکنر بگذار و صبر کن نوار کامل شود."],
-nav:["ناوبری","مسیر سفینه را تنظیم کن.","نقطه مسیر را به مقصد مشخص‌شده بکش."],
-storage:["انبار","جعبه‌ها را مرتب کن.","هر جعبه را به جای هم‌رنگ خودش منتقل کن."],
-data:["آپلود داده","داده‌ها را به سیستم مرکزی بفرست.","Upload را بزن و تا کامل شدن نوار صبر کن."]
-};
-function showMissionInfo(t){
- const h=missionHelp[t.kind]||["مأموریت","این مأموریت را انجام بده.","دستورهای روی پنجره مأموریت را دنبال کن."];
- let box=document.getElementById("missionInfo");
- if(!box){box=document.createElement("div");box.id="missionInfo";document.body.appendChild(box);}
- box.innerHTML='<h2>🔧 '+h[0]+'</h2><p>'+h[1]+'</p><div class="hint">💡 راهنمای دقیق: '+h[2]+'</div><button id="miStart">شروع مأموریت</button><button id="miClose">بستن</button>';
- box.classList.add("show");
- document.getElementById("miStart").onclick=()=>{box.classList.remove("show"); if(typeof startMission==="function")startMission(t);};
- document.getElementById("miClose").onclick=()=>box.classList.remove("show");
+card:["کارت دسترسی","کارت خودت را دو بار به چپ و راست بکش تا دستگاه چهره کارت را شناسایی کند.","وقتی شناسایی شد، روی «دریافت فایل» بزن؛ نوار دریافت ۵ ثانیه طول می‌کشد."],
+wires:["سیم‌کشی برق","۵ سیم رنگی را به هم‌رنگ خود وصل کن.","سر سیم را با ماوس/لمس بگیر و بکش تا به سر سیم هم‌رنگ برسد."],
+oxygen:["رفع نشتی اکسیژن","۳ لوله نشتی دارند. روی محل نشتی هر لوله بزن تا سوراخ بسته شود.","هر لوله فقط یک نشتی دارد؛ هر سه نشتی را پیدا و با کلیک تعمیر کن."],
+mines:["حدس مین","از ۱۰ دایره، دقیقاً ۲ دایره مین هستند. هر دایره‌ای را که کلیک کنی یعنی حدس می‌زنی مین است.","اگر هر دو مین را درست حدس بزنی مأموریت تمام می‌شود؛ اگر روی دایره اشتباه بزنی مأموریت را می‌بازی و می‌توانی دوباره امتحان کنی."],
+data:["دریافت فایل","اول کارت دارای صورت خودت را دو بار چپ و راست بکش تا دستگاه شناسایی‌ات کند. سپس فایل را دریافت کن.","نوار دریافت از ۰ تا ۱۰۰ در ۵ ثانیه پر می‌شود. در پایان تصویر ۱۰ دایره می‌بینی که ۲ دایره قرمز، محل دو مین را نشان می‌دهند."],
+reactor:["راکتور","راکتور را پایدار کن.","عددها را به ترتیب درست فشار بده."],comms:["ارتباطات","ارتباط رادیویی را تنظیم کن.","موج‌ها را روی نقطه سبز قرار بده."],fuel:["سوخت موتور","مخزن موتور را پر کن.","اهرم انتقال سوخت را فعال کن و تا پر شدن مخزن صبر کن."],med:["اسکن پزشکی","نمونه را اسکن کن.","نمونه را داخل اسکنر بگذار و صبر کن نوار کامل شود."],nav:["ناوبری","مسیر سفینه را تنظیم کن.","نقطه مسیر را به مقصد مشخص‌شده بکش."]};
+function showMissionInfo(t){let box=document.getElementById('missionInfo');if(!box){box=document.createElement('div');box.id='missionInfo';document.body.appendChild(box)}const h=missionHelp[t.kind]||['مأموریت','این مأموریت را انجام بده.','دستورهای روی پنجره را دنبال کن.'];box.innerHTML='<h2>🔧 '+h[0]+'</h2><p>'+h[1]+'</p><div class="hint">💡 راهنما: '+h[2]+'</div><button id="miStart">شروع مأموریت</button><button id="miClose">بستن</button>';box.classList.add('show');$('miStart').onclick=()=>{box.classList.remove('show');startMission(t)};$('miClose').onclick=()=>box.classList.remove('show')}
+function closeMission(){const e=$('missionGame');if(e)e.remove()}
+function missionOverlay(title,html){closeMission();const e=document.createElement('div');e.id='missionGame';e.className='missionGame';e.innerHTML='<div class="missionPanel"><button class="missionX" id="mx">✕</button><h2>'+title+'</h2><div class="missionContent">'+html+'</div></div>';document.body.appendChild(e);$('mx').onclick=closeMission;return e}
+function doneTask(id){socket.emit('doTask',{taskId:id,proof:id});closeMission();toast('✅ مأموریت انجام شد')}
+function startMission(t){
+ if(!me||!me.alive)return;
+ if(t.kind==='wires')return wiresMission(t);
+ if(t.kind==='oxygen')return oxygenMission(t);
+ if(t.kind==='mines')return minesMission(t);
+ if(t.kind==='data')return dataMission(t);
+ const e=missionOverlay('🔧 '+t.name,'<p>این مأموریت در نسخه بعدی جزئیات بیشتری خواهد داشت.</p><button id="genericDone">انجام شد</button>');$('genericDone').onclick=()=>doneTask(t.id);
 }
+function wiresMission(t){const colors=['قرمز','آبی','زرد','سبز','بنفش'],cs=['#ef476f','#118ab2','#ffd166','#06d6a0','#9b5de5'];let paired=0,dragging=null;const e=missionOverlay('⚡ سیم‌کشی برق','<p>هر سیم را بکش و به سیم هم‌رنگش وصل کن.</p><div id="wireBoard" class="wireBoard"></div>');const b=$('wireBoard');let left=[],right=[];colors.forEach((c,i)=>{left.push(i);right.push(i)});left.sort(()=>Math.random()-.5);right.sort(()=>Math.random()-.5);function render(){b.innerHTML='<div class="wireCol" id="wl"></div><div class="wireCol" id="wr"></div>';left.forEach(i=>add(i,'wl'));right.forEach(i=>add(i,'wr'))}function add(i,id){const d=document.createElement('div');d.className='wireNode';d.dataset.i=i;d.style.borderColor=cs[i];d.style.color=cs[i];d.textContent='● '+colors[i];d.onpointerdown=ev=>{dragging={i,from:id};d.setPointerCapture(ev.pointerId)};d.onpointerup=ev=>{if(!dragging)return;if(id!==dragging.from&&+d.dataset.i===dragging.i){d.classList.add('matched');b.querySelectorAll('.wireNode').forEach(x=>{if(+x.dataset.i===dragging.i)x.classList.add('matched')});paired++;if(paired===5)setTimeout(()=>doneTask(t.id),300)}dragging=null};document.getElementById(id).appendChild(d)}render()}
+function oxygenMission(t){const leaks=[{x:20,y:42},{x:52,y:58},{x:78,y:35}];const e=missionOverlay('🫧 رفع نشتی اکسیژن','<p>روی هر سه نشتی کلیک کن تا لوله بسته شود.</p><div id="pipes" class="pipes"></div>');const p=$('pipes');leaks.forEach((q,i)=>{const d=document.createElement('button');d.className='leak';d.style.left=q.x+'%';d.style.top=q.y+'%';d.textContent='💧';d.onclick=()=>{if(d.classList.contains('fixed'))return;d.classList.add('fixed');d.textContent='✓';if(p.querySelectorAll('.fixed').length===3)setTimeout(()=>doneTask(t.id),300)};p.appendChild(d)})}
+function minesMission(t){const mines=new Set(lastMinePositions);while(mines.size<2)mines.add(Math.floor(Math.random()*10));lastMinePositions=new Set(mines);let hits=0,wrong=false;const e=missionOverlay('💣 حدس مین','<p>۲ مین را از بین ۱۰ دایره پیدا کن.</p><div id="mineGrid" class="mineGrid"></div><div id="mineMsg"></div>');const g=$('mineGrid');for(let i=0;i<10;i++){const b=document.createElement('button');b.className='mineCircle';b.textContent=i+1;b.onclick=()=>{if(b.disabled)return;if(mines.has(i)){b.classList.add('good');b.textContent='💣';hits++;if(hits===2){setTimeout(()=>doneTask(t.id),500)}}else{b.classList.add('bad');b.textContent='✕';wrong=true;$('mineMsg').textContent='❌ حدس اشتباه بود؛ دوباره امتحان کن.';setTimeout(()=>minesMission(t),700);closeMission()}};g.appendChild(b)}}
+function dataMission(t){let swipes=0,lastDir=0,phase='scan';const e=missionOverlay('📁 دریافت فایل','<div id="dataStage"><div class="faceCard" id="faceCard">🙂<b>'+escapeHtml(me?.name||'بازیکن')+'</b><span>← بکش →</span></div><p>کارت را دو بار به چپ و راست بکش.</p><div id="dataMsg"></div></div>');const card=$('faceCard');let sx=0,down=false;function finishScan(){phase='ready';$('dataStage').innerHTML='<div class="deviceOk">✅ چهره شناسایی شد</div><button id="downloadFile">📥 دریافت فایل</button><div id="progressWrap" class="progressWrap hidden"><div id="progressBar"></div></div><div id="fileResult"></div>';$('downloadFile').onclick=download}card.onpointerdown=ev=>{down=true;sx=ev.clientX;card.setPointerCapture(ev.pointerId)};card.onpointerup=ev=>{if(!down)return;const dx=ev.clientX-sx;down=false;if(Math.abs(dx)>70&&Math.sign(dx)!==lastDir){lastDir=Math.sign(dx);swipes++;card.style.transform='translateX('+Math.sign(dx)*45+'px)';setTimeout(()=>card.style.transform='',120);if(swipes>=2)finishScan()}};function download(){if(phase!=='ready')return;phase='downloading';$('downloadFile').disabled=true;$('progressWrap').classList.remove('hidden');let st=performance.now();function prog(){let pct=Math.min(100,(performance.now()-st)/50);$('progressBar').style.width=pct+'%';if(pct<100)requestAnimationFrame(prog);else showMineResult()}prog()}function showMineResult(){const ids=[...lastMinePositions];$('fileResult').innerHTML='<h3>📄 فایل دریافت شد</h3><p>دو دایره قرمز = محل مین‌ها در مأموریت حدس مین</p><div class="resultMineGrid">'+Array.from({length:10},(_,i)=>'<span class="resultMine '+(ids.has(i)?'red':'')+'">'+(i+1)+'</span>').join('')+'</div><button id="finishData">تکمیل مأموریت</button>';phase='done';$('finishData').onclick=()=>doneTask(t.id)} }
+function escapeHtml(x){return String(x).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]))}
+let lastMinePositions=new Set([1,7]);
 
 function drawShip(){
   // روشن، خوانا و با دیوارهای ضخیم؛ کف سالن‌ها از اتاق‌ها قابل تشخیص است.
@@ -75,7 +78,7 @@ function drawShip(){
   ctx.strokeRect(700,520,1000,500);
   ctx.strokeRect(850,250,700,100);ctx.strokeRect(850,1250,700,100);
 
-  rooms.forEach(r=>{
+  wallRects.forEach(w=>{bctx.fillStyle='#000';bctx.fillRect(w[0]*sx,w[1]*sy,w[2]*sx,w[3]*sy)});rooms.forEach(r=>{
     ctx.fillStyle='#ffffff';ctx.strokeStyle='#203f4b';ctx.lineWidth=9;
     ctx.beginPath();ctx.roundRect(r[1],r[2],r[3],r[4],28);ctx.fill();ctx.stroke();
     ctx.fillStyle='#315765';ctx.font='bold 22px Tahoma';ctx.textAlign='center';
@@ -88,6 +91,8 @@ function drawShip(){
   ctx.fillStyle='#72b8c9';doors.forEach(d=>{
     if(d[2])ctx.fillRect(d[0],d[1],d[2],10);else ctx.fillRect(d[0],d[1],10,d[3]);
   });
+
+  ctx.save();ctx.strokeStyle='#000';ctx.fillStyle='rgba(0,0,0,.9)';ctx.lineWidth=12;wallRects.forEach(w=>{ctx.fillRect(w[0],w[1],w[2],w[3]);});ctx.restore();
 
   // میز جلسه
   ctx.fillStyle='#536c78';ctx.beginPath();ctx.arc(table.x,table.y,70,0,Math.PI*2);ctx.fill();
