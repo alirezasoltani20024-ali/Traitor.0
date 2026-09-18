@@ -15,7 +15,28 @@ function openMeeting(phase,endAt,reason,by){$('meeting').classList.remove('hidde
 function buildVotes(){const area=$('voteList');area.innerHTML='';players.filter(p=>p.alive).forEach(p=>{const b=document.createElement('button');b.textContent='🗳️ '+p.name;b.className=p.id===myId?'self':'';b.onclick=()=>socket.emit('vote',{target:p.id});area.appendChild(b)})}$('skipVote').onclick=()=>socket.emit('vote',{target:'skip'});
 function showMeetingResult(d){clearInterval(window.meetTick);$('meetingTitle').textContent='📊 نتیجه جلسه';$('meetingTimer').textContent='';$('voteArea').classList.add('hidden');$('meetingResult').innerHTML='<div class="resultLine">'+d.result+'</div>';const votes=d.votes||{};for(const [v,t] of Object.entries(votes)){const voter=players.find(p=>p.id===v)?.name||'玩家';const target=t==='skip'?'رد کردن':players.find(p=>p.id===t)?.name||'نامشخص';$('meetingResult').innerHTML+=`<div class="resultLine">${voter} ➜ ${target}</div>`}$('leaveMeeting').classList.remove('hidden')}$('leaveMeeting').onclick=()=>$('meeting').classList.add('hidden');
 $('mapBtn').onclick=()=>{$('mapModal').classList.remove('hidden');mapOpen=true;drawBigMap()};$('closeMap').onclick=()=>{$('mapModal').classList.add('hidden');mapOpen=false};$('emergencyBtn').style.display='none';
-addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);function move(){if(!me)return;let x=0,y=0;if(keys.w||keys.arrowup)y--;if(keys.s||keys.arrowdown)y++;if(keys.a||keys.arrowleft)x--;if(keys.d||keys.arrowright)x++;x+=joy.x;y+=joy.y;let l=Math.hypot(x,y);if(l)socket.emit('move',{dx:x/Math.max(1,l),dy:y/Math.max(1,l)})}setInterval(move,100);
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['z','x','c'].includes(k)){e.preventDefault();if(e.repeat)return;keyboardAction(k)}keys[k]=true});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function keyboardAction(k){
+ if(!me||!me.alive||meeting)return;
+ if(k==='z'){
+   const task=near(T.filter(t=>!tasksDone.includes(t.id)),125);
+   if(task&&task.d<125){showMissionInfo(task);return}
+   toast('🔧 برای انجام مأموریت به علامت قرمز نزدیک شوید.');
+ }
+ if(k==='x'){
+   if(role!=='infiltrator'){toast('🔒 دکمه کشتن فقط برای خائن است.');return}
+   const target=near(players.filter(p=>p.id!==myId&&p.alive),60);
+   if(target&&target.d<=55){socket.emit('kill',{targetId:target.id});return}
+   toast('🔪 برای کشتن باید خیلی نزدیک بازیکن باشید.');
+ }
+ if(k==='c'){
+   const body=near(players.filter(p=>!p.alive),85);
+   if(body&&body.d<75){socket.emit('report');return}
+   if(Math.hypot(me.x-table.x,me.y-table.y)<115){socket.emit('emergency');return}
+   toast('📢 برای جلسه کنار میز یا برای گزارش کنار جسد باشید.');
+ }
+}
+function move(){if(!me)return;let x=0,y=0;if(keys.w||keys.arrowup)y--;if(keys.s||keys.arrowdown)y++;if(keys.a||keys.arrowleft)x--;if(keys.d||keys.arrowright)x++;x+=joy.x;y+=joy.y;let l=Math.hypot(x,y);if(l)socket.emit('move',{dx:x/Math.max(1,l),dy:y/Math.max(1,l)})}setInterval(move,100);
 let drag=false;$('joystick').onpointerdown=e=>{drag=true;$('joystick').setPointerCapture(e.pointerId);jm(e)};$('joystick').onpointermove=e=>drag&&jm(e);$('joystick').onpointerup=()=>{drag=false;joy.x=joy.y=0;$('joy').style.transform='translate(0,0)'};function jm(e){let r=$('joystick').getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,l=Math.hypot(x,y),m=45;if(l>m){x=x/l*m;y=y/l*m}joy.x=x/m;joy.y=y/m;$('joy').style.transform=`translate(${x}px,${y}px)`}
 function near(list,max){if(!me)return null;return list.map(x=>({...x,d:Math.hypot(me.x-x.x,me.y-x.y)})).sort((a,b)=>a.d-b.d)[0]||null}function worldToScreen(x,y,cam){return{x:x-cam.x,y:y-cam.y}}
 function addBtn(text,cls,x,y,fn){const b=document.createElement('button');b.className='context '+cls;b.textContent=text;b.style.left=x+'px';b.style.top=y+'px';b.onclick=fn;$('contextButtons').appendChild(b)}
