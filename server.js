@@ -4,12 +4,39 @@ const path=require("path");
 const {WebSocketServer}=require("ws");
 
 const PORT = process.env.PORT || 3000;
+const MIME = {
+  ".html":"text/html; charset=utf-8",
+  ".js":"application/javascript; charset=utf-8",
+  ".css":"text/css; charset=utf-8",
+  ".json":"application/json; charset=utf-8",
+  ".png":"image/png",
+  ".jpg":"image/jpeg",
+  ".jpeg":"image/jpeg",
+  ".svg":"image/svg+xml"
+};
+
 const server=http.createServer((req,res)=>{
-  if(req.url==="/"||req.url==="/index.html"){
-    res.writeHead(200,{"Content-Type":"text/html; charset=utf-8"});
-    return res.end(fs.readFileSync(path.join(__dirname,"index.html")));
+  let urlPath=(req.url||"/").split("?")[0];
+  if(urlPath==="/") urlPath="/index.html";
+
+  // All client files live inside /public.
+  const filePath=path.join(__dirname,"public",path.normalize(urlPath).replace(/^[/\\]+/,""));
+  const publicRoot=path.resolve(__dirname,"public");
+  const resolved=path.resolve(filePath);
+
+  if(!resolved.startsWith(publicRoot + path.sep) && resolved!==publicRoot){
+    res.writeHead(403); return res.end("Forbidden");
   }
-  res.writeHead(404);res.end("Not found");
+
+  fs.readFile(resolved,(err,data)=>{
+    if(err){
+      res.writeHead(err.code==="ENOENT"?404:500,{"Content-Type":"text/plain; charset=utf-8"});
+      return res.end(err.code==="ENOENT"?"Not found":"Server error");
+    }
+    const ext=path.extname(resolved).toLowerCase();
+    res.writeHead(200,{"Content-Type":MIME[ext]||"application/octet-stream"});
+    res.end(data);
+  });
 });
 const wss=new WebSocketServer({server});
 const rooms=new Map();
@@ -63,6 +90,16 @@ wss.on("connection",ws=>{
     r.players.set(id,{id,name:String(m.name||"بازیکن").slice(0,12),x:20+Math.random()*60,y:20+Math.random()*60,zombie:false,ws});
     ws.room=c;ws.send(JSON.stringify({type:"room",room:c}));start(r);broadcast(r);
   }
+  if(m.type==="action"&&ws.room){
+    const r=rooms.get(ws.room);
+    const p=r&&r.players.get(id);
+    if(!p) return;
+    if(!["mission","kill","meeting"].includes(m.action)) return;
+    r.lastAction={playerId:id,action:m.action,at:Date.now()};
+    broadcast(r);
+    return;
+  }
+
   if(m.type==="move"&&ws.room){
     const r=rooms.get(ws.room),p=r&&r.players.get(id);if(!p||!r.running)return;
     const dx=Math.max(-1,Math.min(1,Number(m.dx)||0)),dy=Math.max(-1,Math.min(1,Number(m.dy)||0));
