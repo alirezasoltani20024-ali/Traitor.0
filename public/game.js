@@ -18,16 +18,81 @@ addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);addEventListener('
 let drag=false;$('joystick').onpointerdown=e=>{drag=true;$('joystick').setPointerCapture(e.pointerId);jm(e)};$('joystick').onpointermove=e=>drag&&jm(e);$('joystick').onpointerup=()=>{drag=false;joy.x=joy.y=0;$('joy').style.transform='translate(0,0)'};function jm(e){let r=$('joystick').getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,l=Math.hypot(x,y),m=45;if(l>m){x=x/l*m;y=y/l*m}joy.x=x/m;joy.y=y/m;$('joy').style.transform=`translate(${x}px,${y}px)`}
 function near(list,max){if(!me)return null;return list.map(x=>({...x,d:Math.hypot(me.x-x.x,me.y-x.y)})).sort((a,b)=>a.d-b.d)[0]||null}function worldToScreen(x,y,cam){return{x:x-cam.x,y:y-cam.y}}
 function addBtn(text,cls,x,y,fn){const b=document.createElement('button');b.className='context '+cls;b.textContent=text;b.style.left=x+'px';b.style.top=y+'px';b.onclick=fn;$('contextButtons').appendChild(b)}
-function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';return}const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));$('contextButtons').innerHTML='';const task=near(T.filter(t=>!tasksDone.includes(t.id)),120);if(task&&task.d<110){const p=worldToScreen(task.x,task.y, {x:camx,y:camy});addBtn('🔧 '+task.name,'taskAction',p.x,p.y,()=>socket.emit('doTask',{taskId:task.id}))}
+function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';return}const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));$('contextButtons').innerHTML='';const task=near(T.filter(t=>!tasksDone.includes(t.id)),120);if(task&&task.d<125){
+ const p=worldToScreen(task.x,task.y,{x:camx,y:camy});
+ addBtn('🔧 انجام مأموریت','taskAction',p.x+18,p.y-48,()=>socket.emit('doTask',{taskId:task.id}));
+}
 const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=worldToScreen(target.x,target.y,{x:camx,y:camy});addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
 const body=near(players.filter(p=>!p.alive),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
 if(Math.hypot(me.x-table.x,me.y-table.y)<115){const p=worldToScreen(table.x,table.y,{x:camx,y:camy});addBtn('📢 جلسه اضطراری','meetAction',p.x,p.y,()=>socket.emit('emergency'))}
 if(role==='infiltrator'){const st=near(S,130);if(st&&st.d<115){const p=worldToScreen(st.x,st.y,{x:camx,y:camy});addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y,()=>showSabMenu(p.x,p.y))}}
 }
 function showSabMenu(x,y){if(sabotageOpen)return;sabotageOpen=true;const wrap=document.createElement('div');wrap.id='sabMenu';wrap.style.cssText=`position:absolute;left:${x}px;top:${y+45}px;z-index:12;background:#fff;border:2px solid #c7dce8;border-radius:12px;padding:6px;box-shadow:0 10px 25px #2345;`;S.forEach(s=>{const b=document.createElement('button');b.textContent='⚡ '+s.name;b.className='sabotageAction';b.onclick=()=>{socket.emit('sabotage',{stationId:s.id});wrap.remove();sabotageOpen=false};wrap.appendChild(b)});$('contextButtons').appendChild(wrap);setTimeout(()=>{if(wrap.isConnected){wrap.remove();sabotageOpen=false}},5000)}
-function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHeight);if(!me)return;const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));ctx.save();ctx.translate(-camx,-camy);ctx.fillStyle='#d7f4ff';ctx.fillRect(0,0,W,H);drawShip();drawSabotages();T.forEach(t=>{if(!tasksDone.includes(t.id)){ctx.fillStyle='#e94455';ctx.beginPath();ctx.arc(t.x,t.y,12+Math.sin(performance.now()/180)*3,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='12px Tahoma';ctx.textAlign='center';ctx.fillText('●',t.x,t.y+4)}});players.forEach(p=>{drawPlayer(p)});ctx.restore();renderContext();if(mapOpen)drawBigMap()}
-function drawShip(){ctx.fillStyle='#eefaff';ctx.strokeStyle='#7ba8bb';ctx.lineWidth=5;ctx.beginPath();ctx.roundRect(45,45,W-90,H-90,80);ctx.fill();ctx.stroke();rooms.forEach(r=>{ctx.fillStyle='#f8fdff';ctx.strokeStyle='#9bbdca';ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(r[1],r[2],r[3],r[4],28);ctx.fill();ctx.stroke();ctx.fillStyle='#7191a0';ctx.font='20px Tahoma';ctx.textAlign='center';ctx.fillText(r[0],r[1]+r[3]/2,r[2]+30)});ctx.fillStyle='#d6eaf2';ctx.fillRect(700,520,1000,500);ctx.fillStyle='#d6eaf2';ctx.fillRect(900,250,600,100);ctx.fillStyle='#d6eaf2';ctx.fillRect(900,1250,600,100);ctx.fillStyle='#6f8b98';ctx.beginPath();ctx.arc(table.x,table.y,62,0,7);ctx.fill();ctx.fillStyle='#e7c24f';ctx.beginPath();ctx.arc(table.x,table.y,43,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.fillText('میز جلسه',table.x,table.y+5)}
+function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHeight);if(!me)return;const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));ctx.save();ctx.translate(-camx,-camy);ctx.fillStyle='#d7f4ff';ctx.fillRect(0,0,W,H);drawShip();drawSabotages();T.forEach(t=>{
+  if(!tasksDone.includes(t.id)){
+    const pulse=15+Math.sin(performance.now()/180)*4;
+    ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse+8,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('!',t.x,t.y+5);
+    ctx.fillStyle='#7b2430';ctx.font='bold 12px Tahoma';ctx.fillText(t.name,t.x,t.y+31);ctx.restore();
+  }
+});players.forEach(p=>{drawPlayer(p)});ctx.restore();renderContext();if(mapOpen)drawBigMap()}
+function drawShip(){
+  // روشن، خوانا و با دیوارهای ضخیم؛ کف سالن‌ها از اتاق‌ها قابل تشخیص است.
+  ctx.fillStyle='#cfeaf3';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#f5fbfd';ctx.strokeStyle='#274b5a';ctx.lineWidth=16;
+  ctx.beginPath();ctx.roundRect(45,45,W-90,H-90,80);ctx.fill();ctx.stroke();
+
+  // راهروهای اصلی
+  ctx.fillStyle='#d8e9ee';ctx.fillRect(700,520,1000,500);
+  ctx.fillRect(850,250,700,100);ctx.fillRect(850,1250,700,100);
+  ctx.strokeStyle='#52717d';ctx.lineWidth=10;
+  ctx.strokeRect(700,520,1000,500);
+  ctx.strokeRect(850,250,700,100);ctx.strokeRect(850,1250,700,100);
+
+  rooms.forEach(r=>{
+    ctx.fillStyle='#ffffff';ctx.strokeStyle='#203f4b';ctx.lineWidth=9;
+    ctx.beginPath();ctx.roundRect(r[1],r[2],r[3],r[4],28);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#315765';ctx.font='bold 22px Tahoma';ctx.textAlign='center';
+    ctx.fillText(r[0],r[1]+r[3]/2,r[2]+34);
+  });
+
+  // درهای روشن در نقاط اتصال
+  const doors=[[700,700,0,90],[700,900,0,90],[1700,700,0,90],[1700,900,0,90],
+               [1050,350,90,0],[1350,350,90,0],[1050,1250,90,0],[1350,1250,90,0]];
+  ctx.fillStyle='#72b8c9';doors.forEach(d=>{
+    if(d[2])ctx.fillRect(d[0],d[1],d[2],10);else ctx.fillRect(d[0],d[1],10,d[3]);
+  });
+
+  // میز جلسه
+  ctx.fillStyle='#536c78';ctx.beginPath();ctx.arc(table.x,table.y,70,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.arc(table.x,table.y,47,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 15px Tahoma';ctx.fillText('میز جلسه',table.x,table.y+5);
+}
 function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
 function drawPlayer(p){if(!p.alive){ctx.fillStyle='#9a9a9a';ctx.fillRect(p.x-25,p.y-8,50,16);ctx.fillStyle='#e33b4f';ctx.beginPath();ctx.arc(p.x,p.y-12,13,0,7);ctx.fill();return}ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle=p.color;ctx.beginPath();ctx.roundRect(-22,-26,44,52,18);ctx.fill();ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-35);if(p.id===myId){ctx.strokeStyle='#23384a';ctx.lineWidth=3;ctx.stroke()}if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-62)}if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-52)}ctx.restore()}
-function drawBigMap(){if(!bigMap.clientWidth)return;const w=bigMap.clientWidth,h=bigMap.clientHeight;bctx.clearRect(0,0,w,h);bctx.fillStyle='#dff6ff';bctx.fillRect(0,0,w,h);const sx=w/W,sy=h/H;rooms.forEach(r=>{bctx.fillStyle='#fff';bctx.strokeStyle='#7ea7b8';bctx.lineWidth=2;bctx.beginPath();bctx.roundRect(r[1]*sx,r[2]*sy,r[3]*sx,r[4]*sy,8);bctx.fill();bctx.stroke()});bctx.fillStyle='#d6eaf2';bctx.fillRect(700*sx,520*sy,1000*sx,500*sy);T.forEach(t=>{if(!tasksDone.includes(t.id)){bctx.fillStyle='#e63d51';bctx.beginPath();bctx.arc(t.x*sx,t.y*sy,8+Math.sin(performance.now()/180)*2,0,7);bctx.fill()}});if(me){bctx.fillStyle=me.color;bctx.beginPath();bctx.arc(me.x*sx,me.y*sy,7,0,7);bctx.fill()}}
+function drawBigMap(){
+ if(!bigMap.clientWidth)return;
+ const w=bigMap.clientWidth,h=bigMap.clientHeight;
+ bctx.clearRect(0,0,w,h);bctx.fillStyle='#dff6ff';bctx.fillRect(0,0,w,h);
+ const sx=w/W,sy=h/H;
+ rooms.forEach(r=>{
+   bctx.fillStyle='#fff';bctx.strokeStyle='#294c59';bctx.lineWidth=3;
+   bctx.beginPath();bctx.roundRect(r[1]*sx,r[2]*sy,r[3]*sx,r[4]*sy,8);bctx.fill();bctx.stroke();
+   bctx.fillStyle='#365c68';bctx.font='bold 10px Tahoma';bctx.textAlign='center';
+   bctx.fillText(r[0],(r[1]+r[3]/2)*sx,(r[2]+18)*sy);
+ });
+ bctx.fillStyle='#d0e4ea';bctx.fillRect(700*sx,520*sy,1000*sx,500*sy);
+ T.forEach(t=>{
+   if(!tasksDone.includes(t.id)){
+     const pulse=8+Math.sin(performance.now()/180)*2;
+     bctx.fillStyle='#e63950';bctx.beginPath();bctx.arc(t.x*sx,t.y*sy,pulse+3,0,Math.PI*2);bctx.fill();
+     bctx.fillStyle='#fff';bctx.font='bold 9px Arial';bctx.fillText('!',t.x*sx,t.y*sy+3);
+   }
+ });
+ if(me){
+   bctx.fillStyle=me.color;bctx.beginPath();bctx.arc(me.x*sx,me.y*sy,8,0,Math.PI*2);bctx.fill();
+   bctx.strokeStyle='#163b49';bctx.lineWidth=2;bctx.stroke();
+ }
+}
 function loopRole(){if(roleTimer&&performance.now()>roleTimer)roleTimer=0;requestAnimationFrame(loopRole)}loopRole();draw();const q=new URLSearchParams(location.search).get('room');if(q)$('code').value=q.toUpperCase();
