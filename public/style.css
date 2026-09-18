@@ -33,3 +33,7 @@ body{background:radial-gradient(circle at 30% 15%,#173b51,#07131d 55%,#02070b);}
 .mineGrid,.resultMineGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:480px;margin:20px auto}.mineCircle,.resultMine{width:72px;height:72px;border-radius:50%;margin:auto;background:#254454;border:3px solid #5f9bb2;color:#fff;font-size:20px;font-weight:bold}.mineCircle.good{background:#e43d55}.mineCircle.bad{background:#56636b}.resultMine{display:grid;place-items:center}.resultMine.red{background:#e43d55;border-color:#ff8795;box-shadow:0 0 18px #e43d55}
 .faceCard{width:210px;height:260px;margin:20px auto;background:#eaf7ff;color:#163247;border-radius:18px;border:5px solid #45d8ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:60px;box-shadow:0 15px 40px #0006;cursor:grab;touch-action:none}.faceCard b{font-size:20px}.faceCard span{font-size:15px;color:#397086}.deviceOk{font-size:24px;padding:22px}.progressWrap{height:28px;background:#203b49;border-radius:20px;overflow:hidden;margin:20px 0}.progressWrap.hidden{display:none}.progressWrap>div{height:100%;width:0;background:#35d48a;transition:width .05s linear}
 @media(max-width:600px){.wireBoard{padding:15px 2%;gap:8px}.wireNode{font-size:14px;padding:11px 5px}.mineGrid,.resultMineGrid{gap:8px}.mineCircle,.resultMine{width:58px;height:58px}.missionPanel{padding:18px}}
+
+/* FIXED6 visibility only */
+#game{display:block;position:fixed;inset:0;width:100vw;height:100vh;background:#07131c}
+#hud{position:relative;z-index:5}
