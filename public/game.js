@@ -20,7 +20,7 @@ function near(list,max){if(!me)return null;return list.map(x=>({...x,d:Math.hypo
 function addBtn(text,cls,x,y,fn){const b=document.createElement('button');b.className='context '+cls;b.textContent=text;b.style.left=x+'px';b.style.top=y+'px';b.onclick=fn;$('contextButtons').appendChild(b)}
 function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';return}const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));$('contextButtons').innerHTML='';const task=near(T.filter(t=>!tasksDone.includes(t.id)),120);if(task&&task.d<125){
  const p=worldToScreen(task.x,task.y,{x:camx,y:camy});
- addBtn('🔧 انجام مأموریت','taskAction',p.x+18,p.y-48,()=>socket.emit('doTask',{taskId:task.id}));
+ addBtn('🔧 انجام مأموریت','taskAction',p.x+18,p.y-48,()=>showMissionInfo(task));
 }
 const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=worldToScreen(target.x,target.y,{x:camx,y:camy});addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
 const body=near(players.filter(p=>!p.alive),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
@@ -37,6 +37,31 @@ function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHe
     ctx.fillStyle='#7b2430';ctx.font='bold 12px Tahoma';ctx.fillText(t.name,t.x,t.y+31);ctx.restore();
   }
 });players.forEach(p=>{drawPlayer(p)});ctx.restore();renderContext();if(mapOpen)drawBigMap()}
+
+const missionHelp={
+card:["کارت دسترسی","به دستگاه کارت دسترسی برو.","کارت را از سمت چپ به راست بکش تا نوار سبز شود."],
+wires:["سیم‌کشی","سیم‌های هم‌رنگ را به هم وصل کن.","هر سیم را بگیر و به سیم هم‌رنگ در طرف مقابل وصل کن."],
+lights:["تنظیم برق","برق این بخش را دوباره فعال کن.","کلیدهای خاموش را روشن کن تا همه چراغ‌ها فعال شوند."],
+fuel:["سوخت موتور","مخزن موتور را پر کن.","اهرم انتقال سوخت را فعال کن و تا پر شدن مخزن صبر کن."],
+engine:["راه‌اندازی موتور","موتور را دوباره روشن کن.","کلیدها را به ترتیب فعال کن و سپس START را بزن."],
+reactor:["راکتور","راکتور را پایدار کن.","عددها را به ترتیب درست فشار بده."],
+comms:["ارتباطات","ارتباط رادیویی را تنظیم کن.","موج‌ها را روی نقطه سبز قرار بده."],
+oxygen:["اکسیژن","فیلتر اکسیژن را پاک‌سازی کن.","ذرات قرمز را بگیر و داخل خروجی بینداز."],
+med:["اسکن پزشکی","نمونه را اسکن کن.","نمونه را داخل اسکنر بگذار و صبر کن نوار کامل شود."],
+nav:["ناوبری","مسیر سفینه را تنظیم کن.","نقطه مسیر را به مقصد مشخص‌شده بکش."],
+storage:["انبار","جعبه‌ها را مرتب کن.","هر جعبه را به جای هم‌رنگ خودش منتقل کن."],
+data:["آپلود داده","داده‌ها را به سیستم مرکزی بفرست.","Upload را بزن و تا کامل شدن نوار صبر کن."]
+};
+function showMissionInfo(t){
+ const h=missionHelp[t.kind]||["مأموریت","این مأموریت را انجام بده.","دستورهای روی پنجره مأموریت را دنبال کن."];
+ let box=document.getElementById("missionInfo");
+ if(!box){box=document.createElement("div");box.id="missionInfo";document.body.appendChild(box);}
+ box.innerHTML='<h2>🔧 '+h[0]+'</h2><p>'+h[1]+'</p><div class="hint">💡 راهنمای دقیق: '+h[2]+'</div><button id="miStart">شروع مأموریت</button><button id="miClose">بستن</button>';
+ box.classList.add("show");
+ document.getElementById("miStart").onclick=()=>{box.classList.remove("show"); if(typeof startMission==="function")startMission(t);};
+ document.getElementById("miClose").onclick=()=>box.classList.remove("show");
+}
+
 function drawShip(){
   // روشن، خوانا و با دیوارهای ضخیم؛ کف سالن‌ها از اتاق‌ها قابل تشخیص است.
   ctx.fillStyle='#cfeaf3';ctx.fillRect(0,0,W,H);

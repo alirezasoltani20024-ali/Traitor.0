@@ -9,3 +9,17 @@
 .meetAction{background:#e4f5ff;border-color:#28799c}
 #contextButtons{pointer-events:none}
 #contextButtons .context,#contextButtons #sabMenu{pointer-events:auto}
+
+/* FIXED4 */
+body{background:radial-gradient(circle at 30% 15%,#173b51,#07131d 55%,#02070b);}
+#game{background:linear-gradient(135deg,#102d3c,#07131c);background-image:radial-gradient(circle,rgba(80,180,220,.13) 1px,transparent 2px);background-size:70px 70px}
+#missionInfo{display:none;position:fixed;z-index:10000;left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,88vw);background:#091a25;border:2px solid #48d8ff;border-radius:18px;padding:20px;color:white;text-align:right;box-shadow:0 20px 60px #000b}
+#missionInfo.show{display:block}
+#missionInfo h2{color:#6be3ff;margin:0 0 10px}
+#missionInfo p{line-height:1.8}
+#missionInfo .hint{background:#123142;border-radius:12px;padding:12px;line-height:1.8;margin:12px 0}
+#missionInfo button{border:0;border-radius:10px;padding:10px 18px;margin-left:8px;font-weight:bold;cursor:pointer}
+#miStart{background:#45d8ff}#miClose{background:#3b4b55;color:#fff}
+#emergencyAlarm{display:none;position:fixed;inset:0;z-index:12000;align-items:center;justify-content:center;text-align:center;background:#8b001f55}
+#emergencyAlarm.show{display:flex}
+.alarmBox{background:#101923ee;border:3px solid #ff465f;border-radius:22px;padding:30px;color:#fff}
