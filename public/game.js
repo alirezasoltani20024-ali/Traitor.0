@@ -7,15 +7,41 @@ const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتو�
 function resize(){const d=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.max(1,Math.floor(innerWidth*d));canvas.height=Math.max(1,Math.floor(innerHeight*d));ctx.setTransform(d,0,0,d,0,0);const md=Math.min(devicePixelRatio||1,1.25);bigMap.width=Math.max(1,Math.floor(bigMap.clientWidth*md));bigMap.height=Math.max(1,Math.floor(bigMap.clientHeight*md));bctx.setTransform(md,0,0,md,0,0)}addEventListener('resize',resize);resize();
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2300)}function nm(){return($('name').value.trim()||'بازیکن').slice(0,18)}function showLobby(c){room=c;$('menu').classList.add('hidden');$('lobby').classList.remove('hidden');$('roomCode').textContent=c}
 function clearMsg(){ $('msg').textContent=''; }
-function ensureConnected(){ if(!socket.connected){ $('msg').textContent='در حال اتصال به سرور...'; socket.connect(); return false } return true }
-$('create').onclick=()=>{clearMsg();if(!ensureConnected())return;const b=$('create');b.disabled=true;b.textContent='در حال ساخت...';socket.emit('createRoom',{name:nm()});setTimeout(()=>{b.disabled=false;b.textContent='ساخت اتاق'},4000)};
-$('join').onclick=()=>{clearMsg();if(!ensureConnected())return;const c=$('code').value.trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)){ $('msg').textContent='کد اتاق باید دقیقاً ۵ حرف یا عدد باشد.';return }const b=$('join');b.disabled=true;b.textContent='در حال ورود...';socket.emit('joinRoom',{name:nm(),code:c});setTimeout(()=>{b.disabled=false;b.textContent='ورود'},4000)};
+let pendingLobbyAction=null;
+function sendLobbyAction(action){
+  if(socket.connected){ action(); return; }
+  pendingLobbyAction=action;
+  $('msg').textContent='در حال اتصال به سرور...';
+  try{socket.connect()}catch(e){}
+}
+$('create').onclick=()=>{
+  clearMsg();
+  const b=$('create'); if(b.disabled)return;
+  b.disabled=true; b.textContent='در حال اتصال...';
+  sendLobbyAction(()=>{
+    b.textContent='در حال ساخت...';
+    socket.emit('createRoom',{name:nm()});
+    setTimeout(()=>{if(b.isConnected||!$('menu').classList.contains('hidden')){b.disabled=false;b.textContent='ساخت اتاق'}},5000);
+  });
+};
+$('join').onclick=()=>{
+  clearMsg();
+  const c=$('code').value.trim().toUpperCase();
+  if(!/^[A-Z0-9]{5}$/.test(c)){ $('msg').textContent='کد اتاق باید دقیقاً ۵ حرف یا عدد باشد.'; return; }
+  const b=$('join'); if(b.disabled)return;
+  b.disabled=true; b.textContent='در حال اتصال...';
+  sendLobbyAction(()=>{
+    b.textContent='در حال ورود...';
+    socket.emit('joinRoom',{name:nm(),code:c});
+    setTimeout(()=>{if(!$('menu').classList.contains('hidden')){b.disabled=false;b.textContent='ورود'}},5000);
+  });
+};
 $('code').addEventListener('input',()=>{$('code').value=$('code').value.replace(/[^a-zA-Z0-9]/g,'').slice(0,5).toUpperCase();clearMsg()});
 $('name').addEventListener('input',clearMsg);
 $('name').addEventListener('keydown',e=>{if(e.key==='Enter')$('create').click()});
 $('code').addEventListener('keydown',e=>{if(e.key==='Enter')$('join').click()});
 $('start').onclick=()=>{if(ensureConnected())socket.emit('startGame')};$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/?room='+room);toast('لینک دعوت کپی شد')}catch(e){toast(location.origin+'/?room='+room)}};
-socket.on('connect',()=>myId=socket.id);socket.on('connect_error',()=>{$('msg').textContent='ارتباط با سرور برقرار نشد.'});socket.on('roomCreated',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('joined',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('errorMsg',t=>$('msg').textContent=t);socket.on('gameStarted',()=>{$('lobby').classList.add('hidden');$('hud').classList.remove('hidden');toast('بازی شروع شد')});
+socket.on('connect',()=>{myId=socket.id;const a=pendingLobbyAction;pendingLobbyAction=null;if(a)setTimeout(a,50)});socket.on('connect_error',()=>{$('msg').textContent='ارتباط با سرور برقرار نشد. دوباره روی دکمه بزنید.';$('create').disabled=false;$('create').textContent='ساخت اتاق';$('join').disabled=false;$('join').textContent='ورود';pendingLobbyAction=null});socket.on('roomCreated',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('joined',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('errorMsg',t=>{$('msg').textContent=t;$('create').disabled=false;$('create').textContent='ساخت اتاق';$('join').disabled=false;$('join').textContent='ورود'});socket.on('gameStarted',()=>{$('lobby').classList.add('hidden');$('hud').classList.remove('hidden');toast('بازی شروع شد')});
 socket.on('roleSecret',d=>{role=d.role;partners=d.partners||[];$('role').textContent=role==='infiltrator'?'نقش: 🔴 خائن':'نقش: 🔵 خدمه';roleTimer=performance.now()+2000;if(role==='infiltrator')$('status').textContent=partners.length?'۲ خائن در بازی هستند':'خائن در بازی است';else $('status').textContent='خدمه؛ مأموریت‌ها را انجام بده'});
 socket.on('state',s=>{players=s.players;me=players.find(p=>p.id===myId)||me;tasksDone=s.tasksDone||[];sabotages=s.sabotages||[];meeting=s.meeting||null;$('count').textContent=players.length;$('tasks').textContent=tasksDone.length+'/'+T.length;if(me&&!me.alive)$('deadBox').classList.remove('hidden');if(s.ended){$('meeting').classList.add('hidden');$('end').classList.remove('hidden');$('winner').textContent=s.winner==='crew'?'🎉 خدمه برنده شدند!':'🔪 خائن برنده شد!';$('status').textContent=s.winner==='crew'?'پایان بازی — خدمه':'پایان بازی — خائن'}renderContext()});
 socket.on('killed',d=>toast('💀 '+d.victimName+' کشته شد — نقش: '+d.revealedRole));socket.on('notice',toast);socket.on('vented',d=>toast('🕳️ تونل: '+d.from+' ← '+d.to));
@@ -24,7 +50,7 @@ function openMeeting(phase,endAt,reason,by){$('meeting').classList.remove('hidde
 function buildVotes(){const area=$('voteList');area.innerHTML='';players.filter(p=>p.alive).forEach(p=>{const b=document.createElement('button');b.textContent='🗳️ '+p.name;b.className=p.id===myId?'self':'';b.onclick=()=>socket.emit('vote',{target:p.id});area.appendChild(b)})}$('skipVote').onclick=()=>socket.emit('vote',{target:'skip'});
 function showMeetingResult(d){clearInterval(window.meetTick);$('meetingTitle').textContent='📊 نتیجه جلسه';$('meetingTimer').textContent='';$('voteArea').classList.add('hidden');$('meetingResult').innerHTML='<div class="resultLine">'+d.result+'</div>';const votes=d.votes||{};for(const [v,t] of Object.entries(votes)){const voter=players.find(p=>p.id===v)?.name||'玩家';const target=t==='skip'?'رد کردن':players.find(p=>p.id===t)?.name||'نامشخص';$('meetingResult').innerHTML+=`<div class="resultLine">${voter} ➜ ${target}</div>`}$('leaveMeeting').classList.remove('hidden')}$('leaveMeeting').onclick=()=>$('meeting').classList.add('hidden');
 $('mapBtn').onclick=()=>{$('mapModal').classList.remove('hidden');mapOpen=true;drawBigMap()};$('closeMap').onclick=()=>{$('mapModal').classList.add('hidden');mapOpen=false};$('emergencyBtn').style.display='none';
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['z','x','c'].includes(k)){e.preventDefault();if(e.repeat)return;keyboardAction(k)}keys[k]=true});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['z','x','c','v'].includes(k)){e.preventDefault();if(e.repeat)return;keyboardAction(k)}keys[k]=true});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function keyboardAction(k){
  if(!me||!me.alive||meeting)return;
  if(k==='z'){
@@ -43,6 +69,12 @@ function keyboardAction(k){
    if(body&&body.d<75){socket.emit('report');return}
    if(Math.hypot(me.x-table.x,me.y-table.y)<115){socket.emit('emergency');return}
    toast('📢 برای جلسه کنار میز یا برای گزارش کنار جسد باشید.');
+ }
+ if(k==='v'){
+   if(role!=='infiltrator'){toast('🔒 تونل فقط برای خائن است.');return}
+   const vent=near(V,95);
+   if(vent&&vent.d<80){showVentMenu(vent.x,vent.y,vent.obj||vent);return}
+   toast('🕳️ برای ورود به تونل باید کنار دریچه باشید.');
  }
 }
 function move(){if(!me)return;let x=0,y=0;if(keys.w||keys.arrowup)y--;if(keys.s||keys.arrowdown)y++;if(keys.a||keys.arrowleft)x--;if(keys.d||keys.arrowright)x++;x+=joy.x;y+=joy.y;let l=Math.hypot(x,y);if(l)socket.emit('move',{dx:x/Math.max(1,l),dy:y/Math.max(1,l)})}setInterval(move,100);
@@ -159,11 +191,3 @@ function drawBigMap(){
 }
 function loopRole(){if(roleTimer&&performance.now()>roleTimer)roleTimer=0;requestAnimationFrame(loopRole)}loopRole();draw();const q=new URLSearchParams(location.search).get('room');if(q)$('code').value=q.toUpperCase();
 
-<script>
-document.addEventListener('keydown', function(e) {
-  if (String(e.key || '').toLowerCase() !== 'v') return;
-  const b = document.getElementById('tunnelBtn') || document.querySelector('[data-action="tunnel"]');
-  if (b && !b.disabled) b.click();
-  else if (typeof enterTunnel === 'function') enterTunnel();
-});
-</script>
