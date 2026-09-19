@@ -45,7 +45,7 @@ $('start').onclick=()=>{
   if(b.disabled)return;
   if(!socket.connected){ $('msg').textContent='در حال اتصال به سرور...'; try{socket.connect()}catch(e){}; return; }
   const n=players.length;
-  if(n<3){toast('حداقل ۳ بازیکن برای شروع لازم است.');return;}
+  if(n<2){toast('حداقل ۲ بازیکن برای شروع لازم است.');return;}
   b.disabled=true; b.textContent='در حال شروع...';
   socket.emit('startGame');
   setTimeout(()=>{if(!$('hud').classList.contains('hidden'))return;b.disabled=false;b.textContent='شروع بازی'},4000);
