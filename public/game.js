@@ -125,7 +125,73 @@ function drawShip(){
   ctx.fillStyle='#fff';ctx.font='bold 15px Tahoma';ctx.fillText('میز جلسه',table.x,table.y+5);
 }
 function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
-function drawPlayer(p){if(!p.alive){return}ctx.save();ctx.translate(p.x,p.y);const sh=p.shape||'classic';ctx.fillStyle=p.color;ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;ctx.beginPath();if(sh==='square'||sh==='robot'||sh==='minecraft'){ctx.roundRect(-22,-26,44,52,sh==='square'?7:4)}else if(sh==='diamond'){ctx.moveTo(0,-30);ctx.lineTo(25,0);ctx.lineTo(0,30);ctx.lineTo(-25,0);ctx.closePath()}else if(sh==='hex'){for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3,x=Math.cos(a)*27,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath()}else if(sh==='cat'){ctx.moveTo(-22,18);ctx.lineTo(-24,-22);ctx.lineTo(-8,-14);ctx.quadraticCurveTo(0,-30,8,-14);ctx.lineTo(24,-22);ctx.lineTo(22,18);ctx.quadraticCurveTo(0,31,-22,18);ctx.closePath()}else if(sh==='ghost'){ctx.moveTo(-23,18);ctx.lineTo(-23,-8);ctx.quadraticCurveTo(-23,-30,0,-30);ctx.quadraticCurveTo(23,-30,23,-8);ctx.lineTo(23,18);ctx.lineTo(12,10);ctx.lineTo(0,18);ctx.lineTo(-12,10);ctx.closePath()}else if(sh==='ninja'){ctx.moveTo(-20,22);ctx.lineTo(-27,-4);ctx.lineTo(-18,-28);ctx.lineTo(18,-28);ctx.lineTo(27,-4);ctx.lineTo(20,22);ctx.quadraticCurveTo(0,32,-20,22);ctx.closePath()}else if(sh==='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath()}else if(sh==='crown'){ctx.moveTo(-25,18);ctx.lineTo(-28,-20);ctx.lineTo(-12,-7);ctx.lineTo(0,-25);ctx.lineTo(12,-7);ctx.lineTo(28,-20);ctx.lineTo(25,18);ctx.closePath()}else{ctx.roundRect(-22,-26,44,52,18)}ctx.fill();ctx.stroke();if(sh==='minecraft'){ctx.fillStyle='#75b943';ctx.fillRect(-24,-27,48,12);ctx.fillStyle='#5b3718';ctx.fillRect(-24,14,48,13)}if(sh==='crown'){ctx.fillStyle='#ffe066';ctx.font='18px Arial';ctx.textAlign='center';ctx.fillText('♛',0,-31)}ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-35);if(p.id===myId){ctx.strokeStyle='#23384a';ctx.lineWidth=3;ctx.stroke()}if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-62)}if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-52)}ctx.restore()}
+function drawPlayer(p){
+  if(!p.alive)return;
+  ctx.save();ctx.translate(p.x,p.y);
+  const sh=p.shape||'classic';
+  const bodyColor=p.color;
+  ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;
+
+  // بدن اصلی: در بیشتر اسکین‌ها همان بدن بازیکن باقی می‌ماند.
+  if(sh==='star'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();
+    for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='diamond'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.moveTo(0,-30);ctx.lineTo(25,0);ctx.lineTo(0,30);ctx.lineTo(-25,0);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='hex'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3,x=Math.cos(a)*27,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='square'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,5);ctx.fill();ctx.stroke();
+  }else{
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,18);ctx.fill();ctx.stroke();
+  }
+
+  // اسکین‌ها فقط جزئیات مخصوص خودشان را روی بدن اضافه می‌کنند.
+  if(sh==='minecraft'){
+    // بدن همان بدن عادی است؛ فقط سر مکعبی شبیه استیو اضافه می‌شود.
+    ctx.fillStyle='#b87952';ctx.strokeStyle='#593b2c';ctx.lineWidth=3;
+    ctx.fillRect(-22,-31,44,24);ctx.strokeRect(-22,-31,44,24);
+    // مو
+    ctx.fillStyle='#4a2f24';ctx.fillRect(-22,-31,44,7);ctx.fillRect(-22,-31,7,14);ctx.fillRect(15,-31,7,10);
+    // صورت استیو
+    ctx.fillStyle='#5b3a2e';ctx.fillRect(-12,-19,6,5);ctx.fillRect(6,-19,6,5);ctx.fillRect(-5,-11,10,3);
+  }else if(sh==='crown'){
+    ctx.fillStyle='#ffd84d';ctx.strokeStyle='#9b6d00';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(-27,-25);ctx.lineTo(-23,-43);ctx.lineTo(-10,-32);ctx.lineTo(0,-46);ctx.lineTo(10,-32);ctx.lineTo(23,-43);ctx.lineTo(27,-25);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#ef476f';ctx.beginPath();ctx.arc(0,-36,3,0,Math.PI*2);ctx.fill();
+  }else if(sh==='cat'){
+    ctx.fillStyle=bodyColor;ctx.strokeStyle='rgba(20,40,55,.5)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-22,-17);ctx.lineTo(-24,-34);ctx.lineTo(-10,-25);ctx.quadraticCurveTo(0,-31,10,-25);ctx.lineTo(24,-34);ctx.lineTo(22,-17);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='robot'){
+    ctx.fillStyle='#aebbc4';ctx.strokeStyle='#42515b';ctx.lineWidth=3;
+    ctx.fillRect(-23,-30,46,25);ctx.strokeRect(-23,-30,46,25);
+    ctx.fillStyle='#63d8ff';ctx.fillRect(-13,-21,7,7);ctx.fillRect(6,-21,7,7);
+    ctx.fillStyle='#42515b';ctx.fillRect(-8,-9,16,3);
+    ctx.fillStyle='#e85dff';ctx.fillRect(0,-36,3,6);
+  }else if(sh==='ghost'){
+    ctx.fillStyle='rgba(245,250,255,.9)';ctx.strokeStyle='#a9bfd0';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-23,18);ctx.lineTo(-23,-9);ctx.quadraticCurveTo(-23,-30,0,-30);ctx.quadraticCurveTo(23,-30,23,-9);ctx.lineTo(23,18);ctx.lineTo(12,10);ctx.lineTo(0,18);ctx.lineTo(-12,10);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='ninja'){
+    // بدن اصلی حفظ می‌شود؛ لباس و ماسک نینجایی روی آن قرار می‌گیرد.
+    ctx.fillStyle='#151923';ctx.fillRect(-22,-26,44,52);
+    ctx.fillStyle='#cfd8dc';ctx.fillRect(-18,-14,36,4);
+    ctx.fillStyle='#e9eef0';ctx.fillRect(-11,-13,6,5);ctx.fillRect(5,-13,6,5);
+    ctx.fillStyle='#d0a15a';ctx.fillRect(-25,17,50,5);
+  }
+
+  // شیشه/چشم اصلی برای اسکین‌هایی که سر جدا ندارند.
+  if(!['minecraft','robot','cat','ghost','ninja'].includes(sh)){
+    ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();
+    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();
+  }
+
+  ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-51);
+  if(p.id===myId){ctx.strokeStyle='#23384a';ctx.lineWidth=3;ctx.strokeRect(-26,-30,52,60)}
+  if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-72)}
+  if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-65)}
+  ctx.restore();
+}
 function drawBigMap(){
  if(!bigMap.clientWidth)return;
  const w=bigMap.clientWidth,h=bigMap.clientHeight;
