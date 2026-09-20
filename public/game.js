@@ -4,67 +4,16 @@ const V=[{id:'v1',name:'کافه',x:430,y:330},{id:'v2',name:'برق',x:780,y:80
 const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];const wallRects=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
 const table={x:1200,y:800};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
+const FREE_SKINS=[['قرمز','#ff5f6d','classic','🔴'],['آبی','#4fc3f7','square','🟦'],['زرد','#ffd166','diamond','🔶'],['سبز','#55d68a','hex','🟢'],['بنفش','#a78bfa','cat','🐱'],['نارنجی','#ff9f43','robot','🤖'],['آبی تیره','#4d96ff','ghost','👻'],['مرجانی','#ff7f50','ninja','🥷'],['فیروزه‌ای','#00c2a8','star','⭐'],['صورتی','#e85dff','crown','👑']];
+function initSkinShop(){const modal=$('skinShop'),grid=$('skinGrid'),open=$('skinShopBtn'),close=$('closeSkinShop');if(!modal||!grid||!open)return;grid.innerHTML='';FREE_SKINS.forEach(([name,color,shape,icon])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:95px;background:'+color+';color:#fff;border:3px solid #fff;border-radius:18px;text-shadow:0 1px 3px #000;font-size:15px;box-shadow:0 5px 16px #2345';b.textContent=icon+' '+name+' — رایگان';b.onclick=()=>{localStorage.setItem('skinColor',color);localStorage.setItem('skinShape',shape);if(socket.connected)socket.emit('setSkin',{color,shape});toast('✅ '+name+' انتخاب شد');modal.classList.add('hidden')};grid.appendChild(b)});open.onclick=()=>modal.classList.remove('hidden');close.onclick=()=>modal.classList.add('hidden');}
+initSkinShop();
 function resize(){const d=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.max(1,Math.floor(innerWidth*d));canvas.height=Math.max(1,Math.floor(innerHeight*d));ctx.setTransform(d,0,0,d,0,0);const md=Math.min(devicePixelRatio||1,1.25);bigMap.width=Math.max(1,Math.floor(bigMap.clientWidth*md));bigMap.height=Math.max(1,Math.floor(bigMap.clientHeight*md));bctx.setTransform(md,0,0,md,0,0)}addEventListener('resize',resize);resize();
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2300)}function nm(){return($('name').value.trim()||'بازیکن').slice(0,18)}function showLobby(c){room=c;$('menu').classList.add('hidden');$('lobby').classList.remove('hidden');$('roomCode').textContent=c}
-function clearMsg(){ $('msg').textContent=''; }
-let pendingLobbyAction=null;
-function sendLobbyAction(action){
-  if(socket.connected){ action(); return; }
-  pendingLobbyAction=action;
-  $('msg').textContent='در حال اتصال به سرور...';
-  try{socket.connect()}catch(e){}
-}
-$('create').onclick=()=>{
-  clearMsg();
-  const b=$('create'); if(b.disabled)return;
-  b.disabled=true; b.textContent='در حال اتصال...';
-  sendLobbyAction(()=>{
-    b.textContent='در حال ساخت...';
-    socket.emit('createRoom',{name:nm()});
-    setTimeout(()=>{if(b.isConnected||!$('menu').classList.contains('hidden')){b.disabled=false;b.textContent='ساخت اتاق'}},5000);
-  });
-};
-$('join').onclick=()=>{
-  clearMsg();
-  const c=$('code').value.trim().toUpperCase();
-  if(!/^[A-Z0-9]{5}$/.test(c)){ $('msg').textContent='کد اتاق باید دقیقاً ۵ حرف یا عدد باشد.'; return; }
-  const b=$('join'); if(b.disabled)return;
-  b.disabled=true; b.textContent='در حال اتصال...';
-  sendLobbyAction(()=>{
-    b.textContent='در حال ورود...';
-    socket.emit('joinRoom',{name:nm(),code:c});
-    setTimeout(()=>{if(!$('menu').classList.contains('hidden')){b.disabled=false;b.textContent='ورود'}},5000);
-  });
-};
-$('code').addEventListener('input',()=>{$('code').value=$('code').value.replace(/[^a-zA-Z0-9]/g,'').slice(0,5).toUpperCase();clearMsg()});
-$('name').addEventListener('input',clearMsg);
-$('name').addEventListener('keydown',e=>{if(e.key==='Enter')$('create').click()});
-$('code').addEventListener('keydown',e=>{if(e.key==='Enter')$('join').click()});
-$('start').onclick=()=>{
-  const b=$('start');
-  if(b.disabled)return;
-  if(!socket.connected){
-    $('msg').textContent='اتصال به سرور قطع است؛ در حال اتصال...';
-    try{socket.connect()}catch(e){}
-    return;
-  }
-  b.disabled=true; b.textContent='در حال شروع...';
-  clearMsg();
-  socket.emit('startGame');
-  clearTimeout(window.startTimer);
-  window.startTimer=setTimeout(()=>{
-    if(!$('hud').classList.contains('hidden'))return;
-    b.disabled=false; b.textContent='شروع بازی';
-    $('msg').textContent='شروع بازی از سرور تأیید نشد. دوباره تلاش کنید.';
-  },7000);
-};$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/?room='+room);toast('لینک دعوت کپی شد')}catch(e){toast(location.origin+'/?room='+room)}};
-socket.on('connect',()=>{myId=socket.id;const a=pendingLobbyAction;pendingLobbyAction=null;if(a)setTimeout(a,50)});socket.on('connect_error',()=>{$('msg').textContent='ارتباط با سرور برقرار نشد. دوباره روی دکمه بزنید.';$('create').disabled=false;$('create').textContent='ساخت اتاق';$('join').disabled=false;$('join').textContent='ورود';pendingLobbyAction=null});socket.on('roomCreated',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('joined',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code)});socket.on('errorMsg',t=>{$('msg').textContent=t;$('create').disabled=false;$('create').textContent='ساخت اتاق';$('join').disabled=false;$('join').textContent='ورود';$('start').disabled=false;$('start').textContent='شروع بازی'});
-function enterGame(){clearTimeout(window.startTimer);$('start').disabled=false;$('start').textContent='شروع بازی';$('lobby').classList.add('hidden');$('hud').classList.remove('hidden');toast('بازی شروع شد')}
-socket.on('startGameOk',()=>enterGame());
-socket.on('gameStarted',()=>enterGame());
+$('create').onclick=()=>socket.emit('createRoom',{name:nm()});$('join').onclick=()=>{const c=$('code').value.trim().toUpperCase();if(c.length<5){$('msg').textContent='کد اتاق را وارد کنید.';return}socket.emit('joinRoom',{name:nm(),code:c})};$('start').onclick=()=>socket.emit('startGame');$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/?room='+room);toast('لینک دعوت کپی شد')}catch(e){toast(location.origin+'/?room='+room)}};
+socket.on('connect',()=>myId=socket.id);socket.on('connect_error',()=>{$('msg').textContent='ارتباط با سرور برقرار نشد.'});socket.on('roomCreated',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code);const c=localStorage.getItem('skinColor');if(c)socket.emit('setSkin',{color:c})});socket.on('joined',d=>{showLobby(d.code);history.replaceState(null,'','?room='+d.code);const c=localStorage.getItem('skinColor');if(c)socket.emit('setSkin',{color:c})});socket.on('errorMsg',t=>$('msg').textContent=t);socket.on('gameStarted',()=>{$('lobby').classList.add('hidden');$('hud').classList.remove('hidden');toast('بازی شروع شد')});
 socket.on('roleSecret',d=>{role=d.role;partners=d.partners||[];$('role').textContent=role==='infiltrator'?'نقش: 🔴 خائن':'نقش: 🔵 خدمه';roleTimer=performance.now()+2000;if(role==='infiltrator')$('status').textContent=partners.length?'۲ خائن در بازی هستند':'خائن در بازی است';else $('status').textContent='خدمه؛ مأموریت‌ها را انجام بده'});
 socket.on('state',s=>{players=s.players;me=players.find(p=>p.id===myId)||me;tasksDone=s.tasksDone||[];sabotages=s.sabotages||[];meeting=s.meeting||null;$('count').textContent=players.length;$('tasks').textContent=tasksDone.length+'/'+T.length;if(me&&!me.alive)$('deadBox').classList.remove('hidden');if(s.ended){$('meeting').classList.add('hidden');$('end').classList.remove('hidden');$('winner').textContent=s.winner==='crew'?'🎉 خدمه برنده شدند!':'🔪 خائن برنده شد!';$('status').textContent=s.winner==='crew'?'پایان بازی — خدمه':'پایان بازی — خائن'}renderContext()});
-socket.on('killed',d=>toast('💀 '+d.victimName+' کشته شد — نقش: '+d.revealedRole));socket.on('notice',toast);
+socket.on('killed',d=>toast('💀 '+d.victimName+' کشته شد — نقش: '+d.revealedRole));socket.on('notice',toast);socket.on('vented',d=>toast('🕳️ تونل: '+d.from+' ← '+d.to));
 socket.on('meetingStart',d=>openMeeting('talk',d.endAt,d.reason,d.by));socket.on('meetingVote',d=>openMeeting('vote',d.endAt,'زمان رأی‌گیری',''));socket.on('meetingResult',d=>showMeetingResult(d));socket.on('voteAccepted',()=>toast('رأی شما ثبت شد'));
 function openMeeting(phase,endAt,reason,by){$('meeting').classList.remove('hidden');$('meetingTitle').textContent=phase==='talk'?'📢 جلسه — زمان صحبت':'🗳️ رأی‌گیری';$('meetingReason').textContent=reason+(by?' توسط '+by:'');$('voteArea').classList.toggle('hidden',phase!=='vote');$('leaveMeeting').classList.add('hidden');$('meetingResult').innerHTML='';$('meetingClaims').innerHTML='';if(phase==='vote')buildVotes();tickMeeting(endAt,phase)}function tickMeeting(endAt,phase){clearInterval(window.meetTick);window.meetTick=setInterval(()=>{const sec=Math.max(0,Math.ceil((endAt-Date.now())/1000));$('meetingTimer').textContent=sec+' ثانیه';if(sec<=0){clearInterval(window.meetTick);if(phase==='talk')toast('وقت صحبت تمام شد؛ رأی بدهید')}},100);buildVotes()}
 function buildVotes(){const area=$('voteList');area.innerHTML='';players.filter(p=>p.alive).forEach(p=>{const b=document.createElement('button');b.textContent='🗳️ '+p.name;b.className=p.id===myId?'self':'';b.onclick=()=>socket.emit('vote',{target:p.id});area.appendChild(b)})}$('skipVote').onclick=()=>socket.emit('vote',{target:'skip'});
@@ -102,10 +51,11 @@ function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';ret
 const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=worldToScreen(target.x,target.y,{x:camx,y:camy});addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
 const body=near(players.filter(p=>!p.alive),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
 if(Math.hypot(me.x-table.x,me.y-table.y)<115){const p=worldToScreen(table.x,table.y,{x:camx,y:camy});addBtn('📢 جلسه اضطراری','meetAction',p.x,p.y,()=>socket.emit('emergency'))}
-if(role==='infiltrator'){const st=near(S,130);if(st&&st.d<115){const p=worldToScreen(st.x,st.y,{x:camx,y:camy});addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y,()=>showSabMenu(p.x,p.y))}}
+if(role==='infiltrator'){const vent=near(V,95);if(vent&&vent.d<80){const vp=worldToScreen(vent.obj.x,vent.obj.y,{x:camx,y:camy});addBtn('🕳️ ورود به تونل','ventAction',vp.x,vp.y,()=>showVentMenu(vp.x,vp.y,vent.obj||vent));}const st=near(S,130);if(st&&st.d<115){const p=worldToScreen(st.x,st.y,{x:camx,y:camy});addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y,()=>showSabMenu(p.x,p.y))}}
 }
+function showVentMenu(x,y,vent){if(sabotageOpen)return;sabotageOpen=true;const wrap=document.createElement('div');wrap.id='ventMenu';wrap.style.cssText=`position:absolute;left:${x}px;top:${y+45}px;z-index:12;background:#101923;color:#fff;border:2px solid #9b35d6;border-radius:12px;padding:8px;box-shadow:0 10px 25px #2345;min-width:180px;text-align:center;`;const title=document.createElement('div');title.textContent='🕳️ تونل زیرزمینی';title.style.fontWeight='bold';title.style.marginBottom='5px';wrap.appendChild(title);V.filter(v=>v.id!==vent.id).forEach(v=>{const b=document.createElement('button');b.textContent='➡️ '+v.name;b.className='sabotageAction';b.onclick=()=>{socket.emit('vent',{ventId:vent.id,destId:v.id});wrap.remove();sabotageOpen=false};wrap.appendChild(b)});$('contextButtons').appendChild(wrap);setTimeout(()=>{if(wrap.isConnected){wrap.remove();sabotageOpen=false}},5000)}
 function showSabMenu(x,y){if(sabotageOpen)return;sabotageOpen=true;const wrap=document.createElement('div');wrap.id='sabMenu';wrap.style.cssText=`position:absolute;left:${x}px;top:${y+45}px;z-index:12;background:#fff;border:2px solid #c7dce8;border-radius:12px;padding:6px;box-shadow:0 10px 25px #2345;`;S.forEach(s=>{const b=document.createElement('button');b.textContent='⚡ '+s.name;b.className='sabotageAction';b.onclick=()=>{socket.emit('sabotage',{stationId:s.id});wrap.remove();sabotageOpen=false};wrap.appendChild(b)});$('contextButtons').appendChild(wrap);setTimeout(()=>{if(wrap.isConnected){wrap.remove();sabotageOpen=false}},5000)}
-function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHeight);if(!me)return;const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));ctx.save();ctx.translate(-camx,-camy);ctx.fillStyle='#d7f4ff';ctx.fillRect(0,0,W,H);drawShip();drawSabotages();T.forEach(t=>{
+function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHeight);if(!me)return;const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));ctx.save();ctx.translate(-camx,-camy);ctx.fillStyle='#d7f4ff';ctx.fillRect(0,0,W,H);drawShip();drawUndergroundTunnels();drawSabotages();T.forEach(t=>{
   if(!tasksDone.includes(t.id)){
     const pulse=15+Math.sin(performance.now()/180)*4;
     ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse+8,0,Math.PI*2);ctx.fill();
@@ -175,8 +125,9 @@ function drawShip(){
   ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.arc(table.x,table.y,47,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff';ctx.font='bold 15px Tahoma';ctx.fillText('میز جلسه',table.x,table.y+5);
 }
+function drawUndergroundTunnels(){if(role!=='infiltrator')return;const pts=V.map(v=>[v.x,v.y]);ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='rgba(35,28,52,.55)';ctx.lineWidth=70;[[0,1],[1,7],[7,5],[5,6],[6,4],[4,0],[1,2],[2,3],[3,7]].forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(pts[a][0],pts[a][1]);ctx.lineTo(pts[b][0],pts[b][1]);ctx.stroke()});ctx.strokeStyle='#9b35d6';ctx.lineWidth=10;[[0,1],[1,7],[7,5],[5,6],[6,4],[4,0],[1,2],[2,3],[3,7]].forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(pts[a][0],pts[a][1]);ctx.lineTo(pts[b][0],pts[b][1]);ctx.stroke()});V.forEach(v=>{ctx.fillStyle='#14101d';ctx.beginPath();ctx.arc(v.x,v.y,34,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c05cff';ctx.lineWidth=6;ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('🕳️',v.x,v.y+5);});ctx.restore()}
 function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
-function drawPlayer(p){if(!p.alive){ctx.fillStyle='#9a9a9a';ctx.fillRect(p.x-25,p.y-8,50,16);ctx.fillStyle='#e33b4f';ctx.beginPath();ctx.arc(p.x,p.y-12,13,0,7);ctx.fill();return}ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle=p.color;ctx.beginPath();ctx.roundRect(-22,-26,44,52,18);ctx.fill();ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-35);if(p.id===myId){ctx.strokeStyle='#23384a';ctx.lineWidth=3;ctx.stroke()}if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-62)}if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-52)}ctx.restore()}
+function drawPlayer(p){if(!p.alive){ctx.fillStyle='#9a9a9a';ctx.fillRect(p.x-25,p.y-8,50,16);ctx.fillStyle='#e33b4f';ctx.beginPath();ctx.arc(p.x,p.y-12,13,0,7);ctx.fill();return}ctx.save();ctx.translate(p.x,p.y);const sh=p.shape||'classic';ctx.fillStyle=p.color;ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;ctx.beginPath();if(sh==='square'){ctx.roundRect(-22,-26,44,52,7)}else if(sh==='diamond'){ctx.moveTo(0,-30);ctx.lineTo(25,0);ctx.lineTo(0,30);ctx.lineTo(-25,0);ctx.closePath()}else if(sh==='hex'){for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3;const x=Math.cos(a)*27,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath()}else if(sh==='cat'){ctx.moveTo(-22,18);ctx.lineTo(-24,-22);ctx.lineTo(-8,-14);ctx.quadraticCurveTo(0,-30,8,-14);ctx.lineTo(24,-22);ctx.lineTo(22,18);ctx.quadraticCurveTo(0,31,-22,18);ctx.closePath()}else if(sh==='robot'){ctx.roundRect(-23,-25,46,50,5)}else if(sh==='ghost'){ctx.moveTo(-23,18);ctx.lineTo(-23,-8);ctx.quadraticCurveTo(-23,-30,0,-30);ctx.quadraticCurveTo(23,-30,23,-8);ctx.lineTo(23,18);ctx.lineTo(12,10);ctx.lineTo(0,18);ctx.lineTo(-12,10);ctx.closePath()}else if(sh==='ninja'){ctx.moveTo(-20,22);ctx.lineTo(-27,-4);ctx.lineTo(-18,-28);ctx.lineTo(18,-28);ctx.lineTo(27,-4);ctx.lineTo(20,22);ctx.quadraticCurveTo(0,32,-20,22);ctx.closePath()}else if(sh==='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath()}else if(sh==='crown'){ctx.moveTo(-25,18);ctx.lineTo(-28,-20);ctx.lineTo(-12,-7);ctx.lineTo(0,-25);ctx.lineTo(12,-7);ctx.lineTo(28,-20);ctx.lineTo(25,18);ctx.closePath()}else{ctx.roundRect(-22,-26,44,52,18)}ctx.fill();ctx.stroke();ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();if(sh==='robot'){ctx.fillStyle='#fff';ctx.fillRect(-15,15,7,5);ctx.fillRect(8,15,7,5)}if(sh==='crown'){ctx.fillStyle='#ffe066';ctx.font='18px Arial';ctx.textAlign='center';ctx.fillText('♛',0,-31)}ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-35);if(p.id===myId){ctx.strokeStyle='#23384a';ctx.lineWidth=3;ctx.stroke()}if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-62)}if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-52)}ctx.restore()}
 function drawBigMap(){
  if(!bigMap.clientWidth)return;
  const w=bigMap.clientWidth,h=bigMap.clientHeight;
@@ -202,4 +153,3 @@ function drawBigMap(){
  }
 }
 function loopRole(){if(roleTimer&&performance.now()>roleTimer)roleTimer=0;requestAnimationFrame(loopRole)}loopRole();draw();const q=new URLSearchParams(location.search).get('room');if(q)$('code').value=q.toUpperCase();
-
