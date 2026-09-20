@@ -38,5 +38,3 @@ body{background:radial-gradient(circle at 30% 15%,#173b51,#07131d 55%,#02070b);}
 #game{display:block;position:fixed;inset:0;width:100vw;height:100vh;background:#07131c}
 #hud{position:relative;z-index:5}
 
-.ventAction{background:#24132f;border:2px solid #9b35d6;color:#fff}
-#ventMenu button{display:block;width:100%;margin:4px 0}

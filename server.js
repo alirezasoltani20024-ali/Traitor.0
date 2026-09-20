@@ -9,18 +9,7 @@ const tasks=[
 {id:'data',x:1570,y:290,name:'دریافت فایل',room:'ناوبری',kind:'data'}];const stations=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];
 const walls=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
 const table={x:1200,y:800};
-const vents=[
-{id:'v1',name:'کافه',x:430,y:330},
-{id:'v2',name:'برق',x:780,y:800},
-{id:'v3',name:'موتور',x:430,y:1330},
-{id:'v4',name:'راکتور',x:430,y:1080},
-{id:'v5',name:'ناوبری',x:1960,y:330},
-{id:'v6',name:'ارتباطات',x:1960,y:1330},
-{id:'v7',name:'درمانگاه',x:1960,y:1080},
-{id:'v8',name:'انبار',x:1200,y:930}
-];
-const ventById=id=>vents.find(v=>v.id===id);
-const ventDist=(a,v)=>Math.hypot(a.x-v.x,a.y-v.y);function code(){let c;do{c=Math.random().toString(36).slice(2,7).toUpperCase()}while(rooms.has(c));return c}function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}function hit(x,y){return walls.some(w=>x+22>w[0]&&x-22<w[0]+w[2]&&y+22>w[1]&&y-22<w[1]+w[3])}
+function code(){let c;do{c=Math.random().toString(36).slice(2,7).toUpperCase()}while(rooms.has(c));return c}function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}function hit(x,y){return walls.some(w=>x+22>w[0]&&x-22<w[0]+w[2]&&y+22>w[1]&&y-22<w[1]+w[3])}
 function pub(p){return{id:p.id,name:p.name,x:p.x,y:p.y,color:p.color,alive:p.alive,claimedRole:p.claimedRole||null}}function send(c){const r=rooms.get(c);if(!r)return;io.to(c).emit('state',{started:r.started,ended:r.ended,winner:r.winner,players:[...r.players.values()].map(pub),tasksDone:[...r.tasksDone],sabotages:r.sabotages,meeting:r.meeting?{phase:r.meeting.phase,endAt:r.meeting.endAt,reason:r.meeting.reason,by:r.meeting.by,votes:r.meeting.phase==='vote'?Object.keys(r.meeting.votes).length:0}:null})}
 function checkWin(r){if(!r.started||r.ended)return;const alive=[...r.players.values()].filter(p=>p.alive),tr=alive.filter(p=>p.role==='infiltrator').length;const allTasksDone=tasks.length===4&&r.tasksDone.size===4&&tasks.every(t=>r.tasksDone.has(t.id));if(allTasksDone||tr===0){r.ended=true;r.winner='crew'}else if(alive.filter(p=>p.role==='crew').length<=tr){r.ended=true;r.winner='infiltrator'}
 if(r.ended){r.meeting=null;io.to(r.code).emit('gameEnded',{winner:r.winner});send(r.code)}}
@@ -39,7 +28,6 @@ socket.on('kill',d=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket
 socket.on('report',()=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id);if(!p?.alive||!r.started||r.ended)return;const body=[...r.players.values()].find(q=>!q.alive&&dist(p,q)<75);if(body){startMeeting(r,p.name,'گزارش جسد');r.players.delete(body.id);send(r.code)}});
 socket.on('emergency',()=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id);if(p?.alive&&r.started&&!r.ended&&dist(p,table)<115)startMeeting(r,p.name,'جلسه اضطراری')});
 socket.on('vote',d=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id);if(!r?.meeting||r.meeting.phase!=='vote'||!p?.alive)return;const target=String(d?.target||'skip');if(target!=='skip'&&!r.players.get(target)?.alive)return;r.meeting.votes[socket.id]=target;io.to(socket.id).emit('voteAccepted');send(r.code);if(Object.keys(r.meeting.votes).length===[...r.players.values()].filter(x=>x.alive).length)finishVote(r.code)});
-socket.on('vent',d=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id),v=ventById(d?.ventId);if(!p||!v||!r.started||r.ended||r.meeting||p.role!=='infiltrator'||!p.alive||ventDist(p,v)>80)return;const dest=ventById(d?.destId);if(!dest||dest.id===v.id)return;p.x=dest.x;p.y=dest.y;io.to(socket.id).emit('vented',{from:v.name,to:dest.name});send(r.code)});
 socket.on('sabotage',d=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id),s=stations.find(x=>x.id===d?.stationId);if(!p||!s||p.role!=='infiltrator'||!p.alive||r.ended||Date.now()-p.lastSab<120000||dist(p,s)>115)return;p.lastSab=Date.now();r.sabotages.push({id:s.id,name:s.name,until:Date.now()+30000});io.to(r.code).emit('notice',`⚠️ خرابی در ${s.name}!`);send(r.code)});
 
 socket.on('emergencyCall',()=>{
