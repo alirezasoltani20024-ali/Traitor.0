@@ -28,21 +28,5 @@ socket.on('kill',d=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket
 socket.on('report',()=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id);if(!p?.alive||!r.started||r.ended)return;const body=[...r.players.values()].find(q=>!q.alive&&dist(p,q)<75);if(body){startMeeting(r,p.name,'گزارش جسد');r.players.delete(body.id);send(r.code)}});
 socket.on('emergency',()=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id);if(p?.alive&&r.started&&!r.ended&&dist(p,table)<115)startMeeting(r,p.name,'جلسه اضطراری')});
 socket.on('vote',d=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id);if(!r?.meeting||r.meeting.phase!=='vote'||!p?.alive)return;const target=String(d?.target||'skip');if(target!=='skip'&&!r.players.get(target)?.alive)return;r.meeting.votes[socket.id]=target;io.to(socket.id).emit('voteAccepted');send(r.code);if(Object.keys(r.meeting.votes).length===[...r.players.values()].filter(x=>x.alive).length)finishVote(r.code)});
-socket.on('sabotage',d=>{const r=rooms.get(socket.data.code),p=r?.players.get(socket.id),s=stations.find(x=>x.id===d?.stationId);if(!p||!s||p.role!=='infiltrator'||!p.alive||r.ended||Date.now()-p.lastSab<120000||dist(p,s)>115)return;p.lastSab=Date.now();r.sabotages.push({id:s.id,name:s.name,until:Date.now()+30000});io.to(r.code).emit('notice',`⚠️ خرابی در ${s.name}!`);send(r.code)});
-
-socket.on('emergencyCall',()=>{
- const room=rooms.get(socket.data.room);
- if(!room||room.phase!=='playing')return;
- const caller=room.players.find(p=>p.id===socket.id);
- if(!caller||!caller.alive)return;
- if(room.emergencyCooldown&&Date.now()-room.emergencyCooldown<20000)return;
- room.emergencyCooldown=Date.now();
- room.phase='meeting';
- room.players.filter(p=>p.alive).forEach(p=>{p.x=1200;p.y=800;});
- io.to(room.code).emit('emergencyAlarm',{callerName:caller.name});
- io.to(room.code).emit('state',publicState(room));
- io.to(room.code).emit('meetingStart',{duration:30000,reason:'emergency'});
-});
-
 socket.on('disconnect',()=>{const c=socket.data.code,r=rooms.get(c);if(!r)return;r.players.delete(socket.id);if(!r.players.size)rooms.delete(c);else{if(r.host===socket.id)r.host=[...r.players.keys()][0];send(c)}});
 });server.listen(PORT,'0.0.0.0',()=>console.log('Server listening on '+PORT));

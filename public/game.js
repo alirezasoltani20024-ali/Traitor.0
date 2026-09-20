@@ -1,6 +1,5 @@
 const socket=io();const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),bigMap=$('bigMap'),bctx=bigMap.getContext('2d');let myId=null,room='',players=[],me=null,role='crew',partners=[],tasksDone=[],sabotages=[],meeting=null,keys={},joy={x:0,y:0},mapOpen=false,sabotageOpen=false,roleTimer=0;const W=2400,H=1600,vision=9999;
 const T=[{id:'wires',x:790,y:690,name:'سیم‌کشی برق',room:'برق',kind:'wires'},{id:'oxygen',x:2050,y:650,name:'رفع نشتی اکسیژن',room:'اکسیژن',kind:'oxygen'},{id:'mines',x:2050,y:290,name:'حدس مین',room:'ارتباطات',kind:'mines'},{id:'data',x:1570,y:290,name:'دریافت فایل',room:'ناوبری',kind:'data'}];
-const V=[{id:'v1',name:'کافه',x:430,y:330},{id:'v2',name:'برق',x:780,y:800},{id:'v3',name:'موتور',x:430,y:1330},{id:'v4',name:'راکتور',x:430,y:1080},{id:'v5',name:'ناوبری',x:1960,y:330},{id:'v6',name:'ارتباطات',x:1960,y:1330},{id:'v7',name:'درمانگاه',x:1960,y:1080},{id:'v8',name:'انبار',x:1200,y:930}];
 const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];const wallRects=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
 const table={x:1200,y:800};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
@@ -125,6 +124,30 @@ function drawShip(){
   ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.arc(table.x,table.y,47,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff';ctx.font='bold 15px Tahoma';ctx.fillText('میز جلسه',table.x,table.y+5);
 }
-
-// Start render loop
-draw();
+function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
+function drawPlayer(p){if(!p.alive){return}ctx.save();ctx.translate(p.x,p.y);const sh=p.shape||'classic';ctx.fillStyle=p.color;ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;ctx.beginPath();if(sh==='square'||sh==='robot'||sh==='minecraft'){ctx.roundRect(-22,-26,44,52,sh==='square'?7:4)}else if(sh==='diamond'){ctx.moveTo(0,-30);ctx.lineTo(25,0);ctx.lineTo(0,30);ctx.lineTo(-25,0);ctx.closePath()}else if(sh==='hex'){for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3,x=Math.cos(a)*27,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath()}else if(sh==='cat'){ctx.moveTo(-22,18);ctx.lineTo(-24,-22);ctx.lineTo(-8,-14);ctx.quadraticCurveTo(0,-30,8,-14);ctx.lineTo(24,-22);ctx.lineTo(22,18);ctx.quadraticCurveTo(0,31,-22,18);ctx.closePath()}else if(sh==='ghost'){ctx.moveTo(-23,18);ctx.lineTo(-23,-8);ctx.quadraticCurveTo(-23,-30,0,-30);ctx.quadraticCurveTo(23,-30,23,-8);ctx.lineTo(23,18);ctx.lineTo(12,10);ctx.lineTo(0,18);ctx.lineTo(-12,10);ctx.closePath()}else if(sh==='ninja'){ctx.moveTo(-20,22);ctx.lineTo(-27,-4);ctx.lineTo(-18,-28);ctx.lineTo(18,-28);ctx.lineTo(27,-4);ctx.lineTo(20,22);ctx.quadraticCurveTo(0,32,-20,22);ctx.closePath()}else if(sh==='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath()}else if(sh==='crown'){ctx.moveTo(-25,18);ctx.lineTo(-28,-20);ctx.lineTo(-12,-7);ctx.lineTo(0,-25);ctx.lineTo(12,-7);ctx.lineTo(28,-20);ctx.lineTo(25,18);ctx.closePath()}else{ctx.roundRect(-22,-26,44,52,18)}ctx.fill();ctx.stroke();if(sh==='minecraft'){ctx.fillStyle='#75b943';ctx.fillRect(-24,-27,48,12);ctx.fillStyle='#5b3718';ctx.fillRect(-24,14,48,13)}if(sh==='crown'){ctx.fillStyle='#ffe066';ctx.font='18px Arial';ctx.textAlign='center';ctx.fillText('♛',0,-31)}ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-35);if(p.id===myId){ctx.strokeStyle='#23384a';ctx.lineWidth=3;ctx.stroke()}if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-62)}if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-52)}ctx.restore()}
+function drawBigMap(){
+ if(!bigMap.clientWidth)return;
+ const w=bigMap.clientWidth,h=bigMap.clientHeight;
+ bctx.clearRect(0,0,w,h);bctx.fillStyle='#dff6ff';bctx.fillRect(0,0,w,h);
+ const sx=w/W,sy=h/H;
+ rooms.forEach(r=>{
+   bctx.fillStyle='#fff';bctx.strokeStyle='#294c59';bctx.lineWidth=3;
+   bctx.beginPath();bctx.roundRect(r[1]*sx,r[2]*sy,r[3]*sx,r[4]*sy,8);bctx.fill();bctx.stroke();
+   bctx.fillStyle='#365c68';bctx.font='bold 10px Tahoma';bctx.textAlign='center';
+   bctx.fillText(r[0],(r[1]+r[3]/2)*sx,(r[2]+18)*sy);
+ });
+ bctx.fillStyle='#d0e4ea';bctx.fillRect(700*sx,520*sy,1000*sx,500*sy);
+ T.forEach(t=>{
+   if(!tasksDone.includes(t.id)){
+     const pulse=8+Math.sin(performance.now()/180)*2;
+     bctx.fillStyle='#e63950';bctx.beginPath();bctx.arc(t.x*sx,t.y*sy,pulse+3,0,Math.PI*2);bctx.fill();
+     bctx.fillStyle='#fff';bctx.font='bold 9px Arial';bctx.fillText('!',t.x*sx,t.y*sy+3);
+   }
+ });
+ if(me){
+   bctx.fillStyle=me.color;bctx.beginPath();bctx.arc(me.x*sx,me.y*sy,8,0,Math.PI*2);bctx.fill();
+   bctx.strokeStyle='#163b49';bctx.lineWidth=2;bctx.stroke();
+ }
+}
+function loopRole(){if(roleTimer&&performance.now()>roleTimer)roleTimer=0;requestAnimationFrame(loopRole)}loopRole();draw();const q=new URLSearchParams(location.search).get('room');if(q)$('code').value=q.toUpperCase();
