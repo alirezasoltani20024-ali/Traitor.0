@@ -34,7 +34,7 @@ function keyboardAction(k){
    toast('🔪 برای کشتن باید خیلی نزدیک بازیکن باشید.');
  }
  if(k==='c'){
-   const body=near(players.filter(p=>!p.alive),85);
+   const body=near(players.filter(p=>p.corpse),85);
    if(body&&body.d<75){socket.emit('report');return}
    if(Math.hypot(me.x-table.x,me.y-table.y)<115){socket.emit('emergency');return}
    toast('📢 برای جلسه کنار میز یا برای گزارش کنار جسد باشید.');
@@ -138,7 +138,6 @@ function drawPlayer(p){
     ctx.fillStyle='#fff';ctx.font='13px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,34);
     ctx.restore();return;
   }
-  ctx.save();ctx.translate(p.x,p.y);
   const sh=p.shape||'classic';
   const bodyColor=p.color;
   ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;
