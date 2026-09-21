@@ -49,7 +49,7 @@ function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';ret
  addBtn('🔧 انجام مأموریت','taskAction',p.x+18,p.y-48,()=>showMissionInfo(task));
 }
 const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=worldToScreen(target.x,target.y,{x:camx,y:camy});addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
-const body=near(players.filter(p=>!p.alive),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
+const body=near(players.filter(p=>p.corpse),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
 if(Math.hypot(me.x-table.x,me.y-table.y)<115){const p=worldToScreen(table.x,table.y,{x:camx,y:camy});addBtn('📢 جلسه اضطراری','meetAction',p.x,p.y,()=>socket.emit('emergency'))}
 if(role==='infiltrator'){const st=near(S,130);if(st&&st.d<115){const p=worldToScreen(st.x,st.y,{x:camx,y:camy});addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y,()=>showSabMenu(p.x,p.y))}}
 }
@@ -126,7 +126,18 @@ function drawShip(){
 }
 function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
 function drawPlayer(p){
-  if(!p.alive)return;
+  if(!p.alive && !p.corpse)return;
+  ctx.save();ctx.translate(p.x,p.y);
+  if(p.corpse){
+    ctx.rotate(-0.18);
+    ctx.fillStyle='#8b3f4b';ctx.strokeStyle='#3b2026';ctx.lineWidth=3;
+    ctx.beginPath();ctx.ellipse(0,10,25,13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(-8,-3,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-5,-7,16,9,5);ctx.fill();
+    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-3,-5,12,6,3);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='13px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,34);
+    ctx.restore();return;
+  }
   ctx.save();ctx.translate(p.x,p.y);
   const sh=p.shape||'classic';
   const bodyColor=p.color;
