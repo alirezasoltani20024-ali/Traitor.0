@@ -153,49 +153,80 @@ function drawPlayer(p){
   if(!p.alive && !p.corpse)return;
   ctx.save();ctx.translate(p.x,p.y);
   if(p.corpse){
-    ctx.rotate(-0.18);ctx.fillStyle='#8b3f4b';ctx.strokeStyle='#3b2026';ctx.lineWidth=3;
-    ctx.beginPath();ctx.ellipse(0,10,25,13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(-8,-3,12,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-5,-7,16,9,5);ctx.fill();
-    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-3,-5,12,6,3);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='13px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,34);
+    ctx.rotate(-0.18);ctx.fillStyle='#8b3f4b';ctx.strokeStyle='#24151a';ctx.lineWidth=4;
+    ctx.beginPath();ctx.ellipse(0,10,27,14,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=p.color||'#ff1825';ctx.beginPath();ctx.arc(-9,-3,13,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#bfeeff';ctx.beginPath();ctx.roundRect(-4,-8,18,10,5);ctx.fill();
+    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-2,-6,14,7,3);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='13px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,36);
     ctx.restore();return;
   }
-  const sh=p.shape||'classic';
-  // «ساده» دقیقاً با ظاهر خدمه براق و کارتونی طراحی شده؛ اسکین‌های دیگر همان رفتار قبلی را حفظ می‌کنند.
-  if(sh==='classic'){
-    drawClassicCrew(p);
-  }else{
-    const bodyColor=p.color;
-    ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;
-    if(sh==='star'){
-      ctx.fillStyle=bodyColor;ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.fill();ctx.stroke();
-    }else if(sh==='diamond'){
-      ctx.fillStyle=bodyColor;ctx.beginPath();ctx.moveTo(0,-30);ctx.lineTo(25,0);ctx.lineTo(0,30);ctx.lineTo(-25,0);ctx.closePath();ctx.fill();ctx.stroke();
-    }else if(sh==='hex'){
-      ctx.fillStyle=bodyColor;ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3,x=Math.cos(a)*27,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.fill();ctx.stroke();
-    }else if(sh==='square'){
-      ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,5);ctx.fill();ctx.stroke();
-    }else{
-      ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,18);ctx.fill();ctx.stroke();
-    }
-    if(sh==='minecraft'){
-      ctx.fillStyle='#b87952';ctx.strokeStyle='#593b2c';ctx.lineWidth=3;ctx.fillRect(-22,-31,44,24);ctx.strokeRect(-22,-31,44,24);ctx.fillStyle='#4a2f24';ctx.fillRect(-22,-31,44,7);ctx.fillRect(-22,-31,7,14);ctx.fillRect(15,-31,7,10);ctx.fillStyle='#5b3a2e';ctx.fillRect(-12,-19,6,5);ctx.fillRect(6,-19,6,5);ctx.fillRect(-5,-11,10,3);
-    }else if(sh==='crown'){
-      ctx.fillStyle='#ffd84d';ctx.strokeStyle='#9b6d00';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-21,-25);ctx.lineTo(-18,-37);ctx.lineTo(-8,-29);ctx.lineTo(0,-40);ctx.lineTo(8,-29);ctx.lineTo(18,-37);ctx.lineTo(21,-25);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ef476f';ctx.beginPath();ctx.arc(0,-32,2.5,0,Math.PI*2);ctx.fill();
-    }else if(sh==='cat'){
-      ctx.fillStyle=bodyColor;ctx.strokeStyle='rgba(20,40,55,.5)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-22,-17);ctx.lineTo(-24,-34);ctx.lineTo(-10,-25);ctx.quadraticCurveTo(0,-31,10,-25);ctx.lineTo(24,-34);ctx.lineTo(22,-17);ctx.closePath();ctx.fill();ctx.stroke();
-    }else if(sh==='robot'){
-      ctx.fillStyle='#aebbc4';ctx.strokeStyle='#42515b';ctx.lineWidth=3;ctx.fillRect(-23,-30,46,25);ctx.strokeRect(-23,-30,46,25);ctx.fillStyle='#63d8ff';ctx.fillRect(-13,-21,7,7);ctx.fillRect(6,-21,7,7);ctx.fillStyle='#42515b';ctx.fillRect(-8,-9,16,3);ctx.fillStyle='#e85dff';ctx.fillRect(0,-36,3,6);
-    }else if(sh==='ghost'){
-      ctx.fillStyle='rgba(245,250,255,.9)';ctx.strokeStyle='#a9bfd0';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-23,18);ctx.lineTo(-23,-9);ctx.quadraticCurveTo(-23,-30,0,-30);ctx.quadraticCurveTo(23,-30,23,-9);ctx.lineTo(23,18);ctx.lineTo(12,10);ctx.lineTo(0,18);ctx.lineTo(-12,10);ctx.closePath();ctx.fill();ctx.stroke();
-    }else if(sh==='ninja'){
-      ctx.fillStyle='#151923';ctx.fillRect(-22,-26,44,52);ctx.fillStyle='#cfd8dc';ctx.fillRect(-18,-14,36,4);ctx.fillStyle='#e9eef0';ctx.fillRect(-11,-13,6,5);ctx.fillRect(5,-13,6,5);ctx.fillStyle='#d0a15a';ctx.fillRect(-25,17,50,5);
-    }
-    if(!['minecraft','robot','cat','ghost','ninja'].includes(sh)){
-      ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();
-    }
+
+  const sh=p.shape||'classic', c=p.color||'#ff1825', dark=shadeColor(c,-65), light=shadeColor(c,55);
+  ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=4;ctx.strokeStyle='#090d12';
+
+  function bodyPath(type){
+    ctx.beginPath();
+    if(type==='square')ctx.roundRect(-25,-28,50,56,6);
+    else if(type==='diamond'){ctx.moveTo(0,-34);ctx.lineTo(28,-2);ctx.lineTo(0,31);ctx.lineTo(-28,-2);ctx.closePath();}
+    else if(type==='hex'){for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3,x=Math.cos(a)*29,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();}
+    else if(type==='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?15:31,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();}
+    else if(type==='ghost'){ctx.moveTo(-24,22);ctx.lineTo(-24,-7);ctx.quadraticCurveTo(-24,-32,0,-32);ctx.quadraticCurveTo(24,-32,24,-7);ctx.lineTo(24,22);ctx.lineTo(12,13);ctx.lineTo(0,23);ctx.lineTo(-12,13);ctx.closePath();}
+    else ctx.roundRect(-24,-30,48,58,19);
   }
+  function fillBody(type=sh){
+    const g=ctx.createLinearGradient(-25,-30,24,30);g.addColorStop(0,light);g.addColorStop(.22,c);g.addColorStop(.72,c);g.addColorStop(1,dark);
+    ctx.fillStyle=g;bodyPath(type);ctx.fill();ctx.stroke();
+    const shine=ctx.createRadialGradient(-10,-12,2,0,0,38);shine.addColorStop(0,'rgba(255,255,255,.20)');shine.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=shine;bodyPath(type);ctx.fill();
+  }
+  function backpack(){
+    const g=ctx.createLinearGradient(-38,-7,-20,25);g.addColorStop(0,light);g.addColorStop(.5,c);g.addColorStop(1,dark);
+    ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(-39,-8,17,35,9);ctx.fill();ctx.stroke();
+  }
+  function visor(x=-6,y=-18,w=33,h=22){
+    ctx.fillStyle='#05090d';ctx.beginPath();ctx.roundRect(x,y,w,h,12);ctx.fill();
+    const vg=ctx.createLinearGradient(x+3,y+2,x+w-3,y+h);vg.addColorStop(0,'#f3fcff');vg.addColorStop(.27,'#a9e7ff');vg.addColorStop(.65,'#56b9e8');vg.addColorStop(1,'#14547d');
+    ctx.fillStyle=vg;ctx.beginPath();ctx.roundRect(x+3,y+3,w-6,h-7,9);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(x+13,y+8,9,3.2,-.12,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(x+w-8,y+10,2.5,0,Math.PI*2);ctx.fill();
+  }
+
+  if(sh==='classic'){backpack();fillBody('classic');visor();}
+  else if(sh==='square'){backpack();fillBody('square');visor(-7,-17,34,22);}
+  else if(sh==='diamond'){backpack();fillBody('diamond');visor(-7,-15,34,21);}
+  else if(sh==='hex'){backpack();fillBody('hex');visor(-7,-16,34,22);}
+  else if(sh==='star'){backpack();fillBody('star');visor(-8,-12,35,20);}
+  else if(sh==='ghost'){backpack();fillBody('ghost');visor(-7,-17,34,22);}
+  else if(sh==='cat'){
+    backpack();fillBody('classic');
+    ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(-23,-18);ctx.lineTo(-26,-37);ctx.lineTo(-10,-27);ctx.quadraticCurveTo(0,-32,10,-27);ctx.lineTo(26,-37);ctx.lineTo(23,-18);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#1b1115';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-25,-6);ctx.lineTo(-35,-9);ctx.moveTo(-25,-1);ctx.lineTo(-35,1);ctx.moveTo(23,-6);ctx.lineTo(33,-9);ctx.stroke();
+    visor(-7,-17,34,22);
+  }else if(sh==='robot'){
+    backpack();
+    const rg=ctx.createLinearGradient(-25,-31,25,29);rg.addColorStop(0,'#eef4f7');rg.addColorStop(.5,'#aebbc4');rg.addColorStop(1,'#697781');ctx.fillStyle=rg;
+    ctx.beginPath();ctx.roundRect(-25,-30,50,57,8);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#18232b';ctx.beginPath();ctx.roundRect(-21,-25,42,31,7);ctx.fill();
+    ctx.fillStyle='#63e8ff';ctx.fillRect(-12,-16,7,7);ctx.fillRect(5,-16,7,7);ctx.fillRect(-6,-4,12,4);
+    ctx.fillStyle='#6be7ff';ctx.beginPath();ctx.arc(0,-36,4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,-32,0,-29);ctx.stroke();
+  }else if(sh==='ninja'){
+    backpack();ctx.fillStyle='#151922';ctx.beginPath();ctx.roundRect(-24,-30,48,58,18);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#bfc7ce';ctx.fillRect(-20,-10,40,5);ctx.fillStyle='#f2f6f8';ctx.fillRect(-12,-9,7,5);ctx.fillRect(5,-9,7,5);
+    ctx.fillStyle='#d51f32';ctx.beginPath();ctx.moveTo(-20,7);ctx.lineTo(27,13);ctx.lineTo(17,19);ctx.lineTo(-27,13);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#c8cfd5';ctx.beginPath();ctx.moveTo(-22,11);ctx.lineTo(-34,2);ctx.lineTo(-29,-4);ctx.lineTo(-17,7);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='crown'){
+    backpack();fillBody('classic');visor();
+    ctx.fillStyle='#ffd52e';ctx.strokeStyle='#8b6100';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-21,-24);ctx.lineTo(-18,-42);ctx.lineTo(-7,-31);ctx.lineTo(0,-45);ctx.lineTo(8,-31);ctx.lineTo(18,-42);ctx.lineTo(21,-24);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#e21f3d';ctx.beginPath();ctx.arc(0,-34,3,0,Math.PI*2);ctx.fill();
+  }else if(sh==='minecraft'){
+    backpack();fillBody('classic');
+    ctx.fillStyle='#b87952';ctx.strokeStyle='#3d261e';ctx.lineWidth=3;ctx.fillRect(-23,-34,46,26);ctx.strokeRect(-23,-34,46,26);
+    ctx.fillStyle='#4a2f24';ctx.fillRect(-23,-34,46,7);ctx.fillRect(-23,-34,7,15);ctx.fillRect(16,-34,7,11);
+    ctx.fillStyle='#5b3a2e';ctx.fillRect(-12,-22,6,5);ctx.fillRect(6,-22,6,5);ctx.fillRect(-5,-14,10,3);
+    ctx.fillStyle='#fff';ctx.fillRect(-7,-21,3,3);ctx.fillRect(6,-21,3,3);
+  }
+
   ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-51);
   if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#ff3348':'#55c9ff';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-72)}
   if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-65)}
