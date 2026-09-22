@@ -38,5 +38,3 @@ body{background:radial-gradient(circle at 30% 15%,#173b51,#07131d 55%,#02070b);}
 #game{display:block;position:fixed;inset:0;width:100vw;height:100vh;background:#07131c}
 #hud{position:relative;z-index:5}
 
-
-
