@@ -1,6 +1,5 @@
 const socket=io();const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),bigMap=$('bigMap'),bctx=bigMap.getContext('2d');let myId=null,room='',players=[],me=null,role='crew',partners=[],tasksDone=[],sabotages=[],meeting=null,keys={},joy={x:0,y:0},mapOpen=false,sabotageOpen=false,roleTimer=0;const W=2400,H=1600,vision=9999;
 const T=[{id:'wires',x:790,y:690,name:'سیم‌کشی برق',room:'برق',kind:'wires'},{id:'oxygen',x:2050,y:650,name:'رفع نشتی اکسیژن',room:'اکسیژن',kind:'oxygen'},{id:'mines',x:2050,y:290,name:'حدس مین',room:'ارتباطات',kind:'mines'},{id:'data',x:1570,y:290,name:'دریافت فایل',room:'ناوبری',kind:'data'}];
-const V=[{id:'v1',name:'کافه',x:430,y:330},{id:'v2',name:'برق',x:780,y:800},{id:'v3',name:'موتور',x:430,y:1330},{id:'v4',name:'راکتور',x:430,y:1080},{id:'v5',name:'ناوبری',x:1960,y:330},{id:'v6',name:'ارتباطات',x:1960,y:1330},{id:'v7',name:'درمانگاه',x:1960,y:1080},{id:'v8',name:'انبار',x:1200,y:930}];
 const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];const wallRects=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
 const table={x:1200,y:800};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
@@ -35,7 +34,7 @@ function keyboardAction(k){
    toast('🔪 برای کشتن باید خیلی نزدیک بازیکن باشید.');
  }
  if(k==='c'){
-   const body=near(players.filter(p=>!p.alive),85);
+   const body=near(players.filter(p=>p.corpse),85);
    if(body&&body.d<75){socket.emit('report');return}
    if(Math.hypot(me.x-table.x,me.y-table.y)<115){socket.emit('emergency');return}
    toast('📢 برای جلسه کنار میز یا برای گزارش کنار جسد باشید.');
@@ -50,7 +49,7 @@ function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';ret
  addBtn('🔧 انجام مأموریت','taskAction',p.x+18,p.y-48,()=>showMissionInfo(task));
 }
 const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=worldToScreen(target.x,target.y,{x:camx,y:camy});addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
-const body=near(players.filter(p=>!p.alive),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
+const body=near(players.filter(p=>p.corpse),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
 if(Math.hypot(me.x-table.x,me.y-table.y)<115){const p=worldToScreen(table.x,table.y,{x:camx,y:camy});addBtn('📢 جلسه اضطراری','meetAction',p.x,p.y,()=>socket.emit('emergency'))}
 if(role==='infiltrator'){const st=near(S,130);if(st&&st.d<115){const p=worldToScreen(st.x,st.y,{x:camx,y:camy});addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y,()=>showSabMenu(p.x,p.y))}}
 }
@@ -61,7 +60,7 @@ function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHe
     ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse+8,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('!',t.x,t.y+5);
-    ctx.fillStyle='#7b2430';ctx.font='bold 12px Tahoma';ctx.fillText(t.name,t.x,t.y+31);ctx.restore();
+    ctx.restore();
   }
 });players.forEach(p=>{drawPlayer(p)});ctx.restore();if(!window._ctxStamp||performance.now()-window._ctxStamp>100){window._ctxStamp=performance.now();renderContext()}if(mapOpen&&(!window._mapStamp||performance.now()-window._mapStamp>180)){window._mapStamp=performance.now();drawBigMap()}}
 
@@ -107,8 +106,7 @@ function drawShip(){
   rooms.forEach(r=>{
     ctx.fillStyle='#ffffff';ctx.strokeStyle='#203f4b';ctx.lineWidth=9;
     ctx.beginPath();ctx.roundRect(r[1],r[2],r[3],r[4],28);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#315765';ctx.font='bold 22px Tahoma';ctx.textAlign='center';
-    ctx.fillText(r[0],r[1]+r[3]/2,r[2]+34);
+    // نام بخش‌ها فقط داخل نقشه نمایش داده می‌شود.
   });
 
   // درهای روشن در نقاط اتصال
@@ -125,6 +123,108 @@ function drawShip(){
   ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.arc(table.x,table.y,47,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff';ctx.font='bold 15px Tahoma';ctx.fillText('میز جلسه',table.x,table.y+5);
 }
+function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
+function drawPlayer(p){
+  if(!p.alive && !p.corpse)return;
+  ctx.save();ctx.translate(p.x,p.y);
+  if(p.corpse){
+    ctx.rotate(-0.18);
+    ctx.fillStyle='#8b3f4b';ctx.strokeStyle='#3b2026';ctx.lineWidth=3;
+    ctx.beginPath();ctx.ellipse(0,10,25,13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(-8,-3,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-5,-7,16,9,5);ctx.fill();
+    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-3,-5,12,6,3);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='13px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,34);
+    ctx.restore();return;
+  }
+  const sh=p.shape||'classic';
+  const bodyColor=p.color;
+  ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;
 
-// Start render loop
-draw();
+  // بدن اصلی: در بیشتر اسکین‌ها همان بدن بازیکن باقی می‌ماند.
+  if(sh==='star'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();
+    for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='diamond'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.moveTo(0,-30);ctx.lineTo(25,0);ctx.lineTo(0,30);ctx.lineTo(-25,0);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='hex'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3,x=Math.cos(a)*27,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='square'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,5);ctx.fill();ctx.stroke();
+  }else{
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,18);ctx.fill();ctx.stroke();
+  }
+
+  // اسکین‌ها فقط جزئیات مخصوص خودشان را روی بدن اضافه می‌کنند.
+  if(sh==='minecraft'){
+    // بدن همان بدن عادی است؛ فقط سر مکعبی شبیه استیو اضافه می‌شود.
+    ctx.fillStyle='#b87952';ctx.strokeStyle='#593b2c';ctx.lineWidth=3;
+    ctx.fillRect(-22,-31,44,24);ctx.strokeRect(-22,-31,44,24);
+    // مو
+    ctx.fillStyle='#4a2f24';ctx.fillRect(-22,-31,44,7);ctx.fillRect(-22,-31,7,14);ctx.fillRect(15,-31,7,10);
+    // صورت استیو
+    ctx.fillStyle='#5b3a2e';ctx.fillRect(-12,-19,6,5);ctx.fillRect(6,-19,6,5);ctx.fillRect(-5,-11,10,3);
+  }else if(sh==='crown'){
+    ctx.fillStyle='#ffd84d';ctx.strokeStyle='#9b6d00';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(-21,-25);ctx.lineTo(-18,-37);ctx.lineTo(-8,-29);ctx.lineTo(0,-40);ctx.lineTo(8,-29);ctx.lineTo(18,-37);ctx.lineTo(21,-25);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#ef476f';ctx.beginPath();ctx.arc(0,-32,2.5,0,Math.PI*2);ctx.fill();
+  }else if(sh==='cat'){
+    ctx.fillStyle=bodyColor;ctx.strokeStyle='rgba(20,40,55,.5)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-22,-17);ctx.lineTo(-24,-34);ctx.lineTo(-10,-25);ctx.quadraticCurveTo(0,-31,10,-25);ctx.lineTo(24,-34);ctx.lineTo(22,-17);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='robot'){
+    ctx.fillStyle='#aebbc4';ctx.strokeStyle='#42515b';ctx.lineWidth=3;
+    ctx.fillRect(-23,-30,46,25);ctx.strokeRect(-23,-30,46,25);
+    ctx.fillStyle='#63d8ff';ctx.fillRect(-13,-21,7,7);ctx.fillRect(6,-21,7,7);
+    ctx.fillStyle='#42515b';ctx.fillRect(-8,-9,16,3);
+    ctx.fillStyle='#e85dff';ctx.fillRect(0,-36,3,6);
+  }else if(sh==='ghost'){
+    ctx.fillStyle='rgba(245,250,255,.9)';ctx.strokeStyle='#a9bfd0';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-23,18);ctx.lineTo(-23,-9);ctx.quadraticCurveTo(-23,-30,0,-30);ctx.quadraticCurveTo(23,-30,23,-9);ctx.lineTo(23,18);ctx.lineTo(12,10);ctx.lineTo(0,18);ctx.lineTo(-12,10);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='ninja'){
+    // بدن اصلی حفظ می‌شود؛ لباس و ماسک نینجایی روی آن قرار می‌گیرد.
+    ctx.fillStyle='#151923';ctx.fillRect(-22,-26,44,52);
+    ctx.fillStyle='#cfd8dc';ctx.fillRect(-18,-14,36,4);
+    ctx.fillStyle='#e9eef0';ctx.fillRect(-11,-13,6,5);ctx.fillRect(5,-13,6,5);
+    ctx.fillStyle='#d0a15a';ctx.fillRect(-25,17,50,5);
+  }
+
+  // شیشه/چشم اصلی برای اسکین‌هایی که سر جدا ندارند.
+  if(!['minecraft','robot','cat','ghost','ninja'].includes(sh)){
+    ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();
+    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();
+  }
+
+  ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-51);
+  if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-72)}
+  if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-65)}
+  ctx.restore();
+}
+function drawBigMap(){
+ if(!bigMap.clientWidth||!bigMap.clientHeight)return;
+ const w=bigMap.clientWidth,h=bigMap.clientHeight,dpr=window.devicePixelRatio||1;
+ const rw=Math.round(w*dpr),rh=Math.round(h*dpr);
+ if(bigMap.width!==rw||bigMap.height!==rh){bigMap.width=rw;bigMap.height=rh;}
+ bctx.setTransform(dpr,0,0,dpr,0,0);
+ bctx.clearRect(0,0,w,h);bctx.fillStyle='#dff6ff';bctx.fillRect(0,0,w,h);
+ const sx=w/W,sy=h/H;
+ rooms.forEach(r=>{
+   bctx.fillStyle='#fff';bctx.strokeStyle='#294c59';bctx.lineWidth=3;
+   bctx.beginPath();bctx.roundRect(r[1]*sx,r[2]*sy,r[3]*sx,r[4]*sy,8);bctx.fill();bctx.stroke();
+   bctx.fillStyle='#365c68';bctx.font='bold 10px Tahoma';bctx.textAlign='center';
+   bctx.fillText(r[0],(r[1]+r[3]/2)*sx,(r[2]+18)*sy);
+ });
+ bctx.fillStyle='#d0e4ea';bctx.fillRect(700*sx,520*sy,1000*sx,500*sy);
+ T.forEach(t=>{
+   if(!tasksDone.includes(t.id)){
+     const pulse=8+Math.sin(performance.now()/180)*2;
+     bctx.fillStyle='#e63950';bctx.beginPath();bctx.arc(t.x*sx,t.y*sy,pulse+3,0,Math.PI*2);bctx.fill();
+     bctx.fillStyle='#fff';bctx.font='bold 9px Arial';bctx.fillText('!',t.x*sx,t.y*sy+3);
+   }
+ });
+ if(me){
+   bctx.fillStyle=me.color;bctx.beginPath();bctx.arc(me.x*sx,me.y*sy,8,0,Math.PI*2);bctx.fill();
+   bctx.strokeStyle='#163b49';bctx.lineWidth=2;bctx.stroke();
+ }
+}
+function loopRole(){if(roleTimer&&performance.now()>roleTimer)roleTimer=0;requestAnimationFrame(loopRole)}loopRole();draw();const q=new URLSearchParams(location.search).get('room');if(q)$('code').value=q.toUpperCase();
