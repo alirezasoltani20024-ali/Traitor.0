@@ -40,35 +40,3 @@ body{background:radial-gradient(circle at 30% 15%,#173b51,#07131d 55%,#02070b);}
 
 
 
-
-/* V8 SAFE VISUAL POLISH — only UI styling, gameplay/map logic unchanged */
-:root{--cyan:#4ee7ff;--blue:#2e8cff;--panel:rgba(9,25,38,.92);--line:rgba(110,220,255,.28)}
-html,body{background:#030a10;color:#eefaff}
-.screen{background:radial-gradient(circle at 50% 20%,rgba(54,153,205,.28),transparent 38%),linear-gradient(145deg,#02070c,#071a27 55%,#02070b)}
-.card{background:linear-gradient(145deg,rgba(14,37,52,.97),rgba(5,18,28,.97));border:1px solid rgba(100,220,255,.28);border-radius:26px;box-shadow:0 30px 100px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08);color:#eefaff}
-.card h1{font-size:46px;text-shadow:0 0 22px rgba(78,231,255,.45);letter-spacing:.5px}
-.card h2{color:#6be8ff;text-shadow:0 0 14px rgba(78,231,255,.3)}
-.card input{background:rgba(3,15,24,.8);border:1px solid rgba(100,220,255,.28);color:#fff;box-shadow:inset 0 0 18px rgba(0,0,0,.25)}
-.card input:focus{border-color:#4ee7ff;box-shadow:0 0 0 3px rgba(78,231,255,.12),inset 0 0 18px rgba(0,0,0,.25)}
-button{background:linear-gradient(180deg,#3ca8ff,#2169d7);border:1px solid rgba(255,255,255,.16);box-shadow:0 8px 22px rgba(22,121,220,.25),inset 0 1px 0 rgba(255,255,255,.18);transition:transform .12s,filter .12s,box-shadow .12s}
-button:hover{filter:brightness(1.12);box-shadow:0 10px 28px rgba(22,145,230,.35),inset 0 1px 0 rgba(255,255,255,.2)}
-button:active{transform:translateY(1px) scale(.97)}
-#game{background:#050d14;box-shadow:inset 0 0 100px rgba(0,0,0,.5)}
-.topbar{background:linear-gradient(180deg,rgba(10,31,44,.94),rgba(5,18,28,.9));border:1px solid rgba(101,224,255,.25);border-radius:18px;color:#eafaff;box-shadow:0 12px 35px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(10px)}
-.topbar span{padding:4px 10px;border-radius:10px;background:rgba(255,255,255,.035)}
-#fixedButtons button,#contextButtons .context{border-radius:14px;backdrop-filter:blur(7px);box-shadow:0 10px 25px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.2)}
-#mapBtn{background:linear-gradient(180deg,#36c9ff,#1766c8)}
-#emergencyBtn{background:linear-gradient(180deg,#7c7fff,#4c45c8)}
-#joystick{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.28),rgba(255,255,255,.06));border:2px solid rgba(120,225,255,.4);box-shadow:0 12px 35px rgba(0,0,0,.35),inset 0 0 25px rgba(50,180,230,.08);backdrop-filter:blur(5px)}
-#joy{background:radial-gradient(circle at 35% 30%,#7eeaff,#2b7ab0);border:2px solid rgba(255,255,255,.3);box-shadow:0 5px 18px rgba(0,0,0,.35)}
-.overlay{background:rgba(1,9,15,.72);backdrop-filter:blur(8px)}
-.mapCard,.meetingCard{background:linear-gradient(145deg,rgba(10,31,44,.98),rgba(4,15,23,.98));border:1px solid rgba(91,222,255,.3);color:#eefaff;box-shadow:0 30px 90px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.07)}
-#bigMap{background:#06131c;border:1px solid rgba(90,220,255,.25);box-shadow:inset 0 0 35px rgba(0,0,0,.35)}
-.close,.missionX{box-shadow:0 6px 18px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2)}
-#toast{background:rgba(7,25,37,.96);color:#eaffff;border:1px solid rgba(82,220,255,.25);box-shadow:0 12px 35px rgba(0,0,0,.45)}
-#deadBox{background:rgba(7,25,37,.96);color:#fff;border:1px solid rgba(82,220,255,.25);box-shadow:0 15px 40px rgba(0,0,0,.5)}
-.missionPanel{background:linear-gradient(145deg,#0c2432,#06141e);border:1px solid rgba(87,224,255,.35);box-shadow:0 30px 100px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06)}
-.wireNode{background:linear-gradient(180deg,#17384a,#0b2432);border-width:3px;box-shadow:0 7px 18px rgba(0,0,0,.28)}
-.mineCircle,.resultMine{box-shadow:0 8px 20px rgba(0,0,0,.3),inset 0 2px 5px rgba(255,255,255,.08)}
-.faceCard{background:linear-gradient(145deg,#effcff,#bfe9f5);box-shadow:0 18px 45px rgba(0,0,0,.5),0 0 25px rgba(65,216,255,.14)}
-.progressWrap{box-shadow:inset 0 2px 8px rgba(0,0,0,.35)}
