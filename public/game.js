@@ -3,9 +3,9 @@ const T=[{id:'wires',x:790,y:690,name:'سیم‌کشی برق',room:'برق',kin
 const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];const wallRects=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
 const table={x:1200,y:800};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
-const FREE_COLORS=[['قرمز','#ff1825'],['آبی','#1557e8'],['سبز','#18b83b'],['زرد','#ffd51f'],['نارنجی','#ff6a0a'],['صورتی','#f05aa8'],['بنفش','#6420c8'],['فیروزه‌ای','#21d8e8'],['سبز روشن','#69e51c'],['قهوه‌ای','#7b3f18'],['مشکی','#20262e'],['سفید','#f4f7fb'],['خاکستری','#73808b'],['زرشکی','#a80f2f'],['سرمه‌ای','#143b8f'],['یاسی','#a995ff'],['کرم','#f5e6bd'],['نعنایی','#59d7bc'],['زیتونی','#536b12'],['طلایی','#f2b400'],['نقره‌ای','#b9c9d8']];
+const FREE_COLORS=[['قرمز','#ff5f6d'],['آبی','#4fc3f7'],['زرد','#ffd166'],['سبز','#55d68a'],['بنفش','#a78bfa'],['نارنجی','#ff9f43'],['آبی تیره','#4d96ff'],['مرجانی','#ff7f50'],['فیروزه‌ای','#00c2a8'],['صورتی','#e85dff']];
 const FREE_SKINS=[['ساده','classic','🧑‍🚀'],['مربع','square','⬛'],['لوزی','diamond','🔶'],['شش‌ضلعی','hex','⬡'],['گربه','cat','🐱'],['ربات','robot','🤖'],['روح','ghost','👻'],['نینجا','ninja','🥷'],['ستاره','star','⭐'],['تاج','crown','👑'],['ماینکرفتی','minecraft','🟩']];
-function initSkinShop(){const modal=$('skinShop'),colors=$('colorGrid'),grid=$('skinGrid'),open=$('skinShopBtn'),close=$('closeSkinShop');if(!modal||!grid||!colors||!open)return;colors.innerHTML='';grid.innerHTML='';const selectedColor=()=>localStorage.getItem('skinColor')||'#ff1825';const selectedShape=()=>localStorage.getItem('skinShape')||'classic';FREE_COLORS.forEach(([name,color])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:60px;background:'+color+';color:#fff;border:3px solid '+(selectedColor()===color?'#111':'#fff');b.textContent='🎨 '+name;b.onclick=()=>{localStorage.setItem('skinColor',color);if(socket.connected)socket.emit('setSkin',{color,shape:selectedShape()});initSkinShop();toast('✅ رنگ '+name+' انتخاب شد')};colors.appendChild(b)});FREE_SKINS.forEach(([name,shape,icon])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:85px;background:#24364a;color:#fff;border:3px solid '+(selectedShape()===shape?'#ffd166':'#ffffff55');b.textContent=icon+' '+name;b.onclick=()=>{localStorage.setItem('skinShape',shape);if(socket.connected)socket.emit('setSkin',{shape,color:selectedColor()});initSkinShop();toast('✅ اسکین '+name+' انتخاب شد')};grid.appendChild(b)});open.onclick=()=>{initSkinShop();modal.classList.remove('hidden')};close.onclick=()=>modal.classList.add('hidden')}
+function initSkinShop(){const modal=$('skinShop'),colors=$('colorGrid'),grid=$('skinGrid'),open=$('skinShopBtn'),close=$('closeSkinShop');if(!modal||!grid||!colors||!open)return;colors.innerHTML='';grid.innerHTML='';const selectedColor=()=>localStorage.getItem('skinColor')||'#4fc3f7';const selectedShape=()=>localStorage.getItem('skinShape')||'classic';FREE_COLORS.forEach(([name,color])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:60px;background:'+color+';color:#fff;border:3px solid '+(selectedColor()===color?'#111':'#fff');b.textContent='🎨 '+name;b.onclick=()=>{localStorage.setItem('skinColor',color);if(socket.connected)socket.emit('setSkin',{color,shape:selectedShape()});initSkinShop();toast('✅ رنگ '+name+' انتخاب شد')};colors.appendChild(b)});FREE_SKINS.forEach(([name,shape,icon])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:85px;background:#24364a;color:#fff;border:3px solid '+(selectedShape()===shape?'#ffd166':'#ffffff55');b.textContent=icon+' '+name;b.onclick=()=>{localStorage.setItem('skinShape',shape);if(socket.connected)socket.emit('setSkin',{shape,color:selectedColor()});initSkinShop();toast('✅ اسکین '+name+' انتخاب شد')};grid.appendChild(b)});open.onclick=()=>{initSkinShop();modal.classList.remove('hidden')};close.onclick=()=>modal.classList.add('hidden')}
 initSkinShop();
 function resize(){const d=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.max(1,Math.floor(innerWidth*d));canvas.height=Math.max(1,Math.floor(innerHeight*d));ctx.setTransform(d,0,0,d,0,0);const md=Math.min(devicePixelRatio||1,1.25);bigMap.width=Math.max(1,Math.floor(bigMap.clientWidth*md));bigMap.height=Math.max(1,Math.floor(bigMap.clientHeight*md));bctx.setTransform(md,0,0,md,0,0)}addEventListener('resize',resize);resize();
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2300)}function nm(){return($('name').value.trim()||'بازیکن').slice(0,18)}function showLobby(c){room=c;$('menu').classList.add('hidden');$('lobby').classList.remove('hidden');$('roomCode').textContent=c}
@@ -34,7 +34,7 @@ function keyboardAction(k){
    toast('🔪 برای کشتن باید خیلی نزدیک بازیکن باشید.');
  }
  if(k==='c'){
-   const body=near(players.filter(p=>p.corpse),85);
+   const body=near(players.filter(p=>!p.alive),85);
    if(body&&body.d<75){socket.emit('report');return}
    if(Math.hypot(me.x-table.x,me.y-table.y)<115){socket.emit('emergency');return}
    toast('📢 برای جلسه کنار میز یا برای گزارش کنار جسد باشید.');
@@ -49,7 +49,7 @@ function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';ret
  addBtn('🔧 انجام مأموریت','taskAction',p.x+18,p.y-48,()=>showMissionInfo(task));
 }
 const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=worldToScreen(target.x,target.y,{x:camx,y:camy});addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
-const body=near(players.filter(p=>p.corpse),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
+const body=near(players.filter(p=>!p.alive),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
 if(Math.hypot(me.x-table.x,me.y-table.y)<115){const p=worldToScreen(table.x,table.y,{x:camx,y:camy});addBtn('📢 جلسه اضطراری','meetAction',p.x,p.y,()=>socket.emit('emergency'))}
 if(role==='infiltrator'){const st=near(S,130);if(st&&st.d<115){const p=worldToScreen(st.x,st.y,{x:camx,y:camy});addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y,()=>showSabMenu(p.x,p.y))}}
 }
@@ -60,7 +60,7 @@ function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHe
     ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse+8,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('!',t.x,t.y+5);
-    ctx.restore();
+    ctx.fillStyle='#7b2430';ctx.font='bold 12px Tahoma';ctx.fillText(t.name,t.x,t.y+31);ctx.restore();
   }
 });players.forEach(p=>{drawPlayer(p)});ctx.restore();if(!window._ctxStamp||performance.now()-window._ctxStamp>100){window._ctxStamp=performance.now();renderContext()}if(mapOpen&&(!window._mapStamp||performance.now()-window._mapStamp>180)){window._mapStamp=performance.now();drawBigMap()}}
 
@@ -106,7 +106,8 @@ function drawShip(){
   rooms.forEach(r=>{
     ctx.fillStyle='#ffffff';ctx.strokeStyle='#203f4b';ctx.lineWidth=9;
     ctx.beginPath();ctx.roundRect(r[1],r[2],r[3],r[4],28);ctx.fill();ctx.stroke();
-    // نام بخش‌ها فقط داخل نقشه نمایش داده می‌شود.
+    ctx.fillStyle='#315765';ctx.font='bold 22px Tahoma';ctx.textAlign='center';
+    ctx.fillText(r[0],r[1]+r[3]/2,r[2]+34);
   });
 
   // درهای روشن در نقاط اتصال
@@ -124,120 +125,76 @@ function drawShip(){
   ctx.fillStyle='#fff';ctx.font='bold 15px Tahoma';ctx.fillText('میز جلسه',table.x,table.y+5);
 }
 function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
-function hexToRgb(hex){const h=String(hex||'#4fc3f7').replace('#','');const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h,16);return {r:(n>>16)&255,g:(n>>8)&255,b:n&255}}
-function shadeColor(hex,amt){const c=hexToRgb(hex);return `rgb(${Math.max(0,Math.min(255,c.r+amt))},${Math.max(0,Math.min(255,c.g+amt))},${Math.max(0,Math.min(255,c.b+amt))})`}
-function drawClassicCrew(p){
-  const c=p.color||'#4fc3f7',dark=shadeColor(c,-55),light=shadeColor(c,45);
-  // backpack
-  let g=ctx.createLinearGradient(-34,-8,-22,20);g.addColorStop(0,light);g.addColorStop(.45,c);g.addColorStop(1,dark);
-  ctx.fillStyle=g;ctx.strokeStyle='#101820';ctx.lineWidth=3;
-  ctx.beginPath();ctx.roundRect(-36,-8,15,34,8);ctx.fill();ctx.stroke();
-  // main body
-  g=ctx.createLinearGradient(-23,-29,22,30);g.addColorStop(0,light);g.addColorStop(.18,c);g.addColorStop(.72,c);g.addColorStop(1,dark);
-  ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(-22,-29,45,58,18);ctx.fill();ctx.stroke();
-  // subtle belly highlight
-  const hg=ctx.createRadialGradient(-8,-8,2,0,0,40);hg.addColorStop(0,'rgba(255,255,255,.20)');hg.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=hg;ctx.beginPath();ctx.roundRect(-20,-27,41,54,16);ctx.fill();
-  // feet separation
-  ctx.fillStyle='rgba(0,0,0,.10)';ctx.fillRect(-1,17,4,10);
-  // visor outer frame
-  ctx.fillStyle='#05090d';ctx.beginPath();ctx.roundRect(-8,-18,32,23,12);ctx.fill();
-  // visor glass
-  const vg=ctx.createLinearGradient(-5,-16,17,5);vg.addColorStop(0,'#eafaff');vg.addColorStop(.28,'#a8e7ff');vg.addColorStop(.65,'#56b9e8');vg.addColorStop(1,'#17618f');
-  ctx.fillStyle=vg;ctx.beginPath();ctx.roundRect(-5,-15,27,17,9);ctx.fill();
-  // visor shine
-  ctx.fillStyle='rgba(255,255,255,.88)';ctx.beginPath();ctx.ellipse(4,-10,9,3.2,-.12,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.82)';ctx.beginPath();ctx.arc(16,-6,2.6,0,Math.PI*2);ctx.fill();
-}
 function drawPlayer(p){
-  if(!p.alive && !p.corpse)return;
+  if(!p.alive)return;
   ctx.save();ctx.translate(p.x,p.y);
-  if(p.corpse){
-    ctx.rotate(-0.18);ctx.fillStyle='#8b3f4b';ctx.strokeStyle='#24151a';ctx.lineWidth=4;
-    ctx.beginPath();ctx.ellipse(0,10,27,14,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle=p.color||'#ff1825';ctx.beginPath();ctx.arc(-9,-3,13,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#bfeeff';ctx.beginPath();ctx.roundRect(-4,-8,18,10,5);ctx.fill();
-    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-2,-6,14,7,3);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='13px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,36);
-    ctx.restore();return;
+  const sh=p.shape||'classic';
+  const bodyColor=p.color;
+  ctx.strokeStyle='rgba(20,40,55,.35)';ctx.lineWidth=3;
+
+  // بدن اصلی: در بیشتر اسکین‌ها همان بدن بازیکن باقی می‌ماند.
+  if(sh==='star'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();
+    for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='diamond'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.moveTo(0,-30);ctx.lineTo(25,0);ctx.lineTo(0,30);ctx.lineTo(-25,0);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='hex'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3,x=Math.cos(a)*27,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='square'){
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,5);ctx.fill();ctx.stroke();
+  }else{
+    ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22,-26,44,52,18);ctx.fill();ctx.stroke();
   }
 
-  const sh=p.shape||'classic', c=p.color||'#ff1825', dark=shadeColor(c,-65), light=shadeColor(c,55);
-  ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=4;ctx.strokeStyle='#090d12';
-
-  function bodyPath(type){
-    ctx.beginPath();
-    if(type==='square')ctx.roundRect(-25,-28,50,56,6);
-    else if(type==='diamond'){ctx.moveTo(0,-34);ctx.lineTo(28,-2);ctx.lineTo(0,31);ctx.lineTo(-28,-2);ctx.closePath();}
-    else if(type==='hex'){for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3,x=Math.cos(a)*29,y=Math.sin(a)*30;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();}
-    else if(type==='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?15:31,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();}
-    else if(type==='ghost'){ctx.moveTo(-24,22);ctx.lineTo(-24,-7);ctx.quadraticCurveTo(-24,-32,0,-32);ctx.quadraticCurveTo(24,-32,24,-7);ctx.lineTo(24,22);ctx.lineTo(12,13);ctx.lineTo(0,23);ctx.lineTo(-12,13);ctx.closePath();}
-    else ctx.roundRect(-24,-30,48,58,19);
-  }
-  function fillBody(type=sh){
-    const g=ctx.createLinearGradient(-25,-30,24,30);g.addColorStop(0,light);g.addColorStop(.22,c);g.addColorStop(.72,c);g.addColorStop(1,dark);
-    ctx.fillStyle=g;bodyPath(type);ctx.fill();ctx.stroke();
-    const shine=ctx.createRadialGradient(-10,-12,2,0,0,38);shine.addColorStop(0,'rgba(255,255,255,.20)');shine.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=shine;bodyPath(type);ctx.fill();
-  }
-  function backpack(){
-    const g=ctx.createLinearGradient(-38,-7,-20,25);g.addColorStop(0,light);g.addColorStop(.5,c);g.addColorStop(1,dark);
-    ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(-39,-8,17,35,9);ctx.fill();ctx.stroke();
-  }
-  function visor(x=-6,y=-18,w=33,h=22){
-    ctx.fillStyle='#05090d';ctx.beginPath();ctx.roundRect(x,y,w,h,12);ctx.fill();
-    const vg=ctx.createLinearGradient(x+3,y+2,x+w-3,y+h);vg.addColorStop(0,'#f3fcff');vg.addColorStop(.27,'#a9e7ff');vg.addColorStop(.65,'#56b9e8');vg.addColorStop(1,'#14547d');
-    ctx.fillStyle=vg;ctx.beginPath();ctx.roundRect(x+3,y+3,w-6,h-7,9);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(x+13,y+8,9,3.2,-.12,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(x+w-8,y+10,2.5,0,Math.PI*2);ctx.fill();
-  }
-
-  if(sh==='classic'){backpack();fillBody('classic');visor();}
-  else if(sh==='square'){backpack();fillBody('square');visor(-7,-17,34,22);}
-  else if(sh==='diamond'){backpack();fillBody('diamond');visor(-7,-15,34,21);}
-  else if(sh==='hex'){backpack();fillBody('hex');visor(-7,-16,34,22);}
-  else if(sh==='star'){backpack();fillBody('star');visor(-8,-12,35,20);}
-  else if(sh==='ghost'){backpack();fillBody('ghost');visor(-7,-17,34,22);}
-  else if(sh==='cat'){
-    backpack();fillBody('classic');
-    ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(-23,-18);ctx.lineTo(-26,-37);ctx.lineTo(-10,-27);ctx.quadraticCurveTo(0,-32,10,-27);ctx.lineTo(26,-37);ctx.lineTo(23,-18);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.strokeStyle='#1b1115';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-25,-6);ctx.lineTo(-35,-9);ctx.moveTo(-25,-1);ctx.lineTo(-35,1);ctx.moveTo(23,-6);ctx.lineTo(33,-9);ctx.stroke();
-    visor(-7,-17,34,22);
-  }else if(sh==='robot'){
-    backpack();
-    const rg=ctx.createLinearGradient(-25,-31,25,29);rg.addColorStop(0,'#eef4f7');rg.addColorStop(.5,'#aebbc4');rg.addColorStop(1,'#697781');ctx.fillStyle=rg;
-    ctx.beginPath();ctx.roundRect(-25,-30,50,57,8);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#18232b';ctx.beginPath();ctx.roundRect(-21,-25,42,31,7);ctx.fill();
-    ctx.fillStyle='#63e8ff';ctx.fillRect(-12,-16,7,7);ctx.fillRect(5,-16,7,7);ctx.fillRect(-6,-4,12,4);
-    ctx.fillStyle='#6be7ff';ctx.beginPath();ctx.arc(0,-36,4,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,-32,0,-29);ctx.stroke();
-  }else if(sh==='ninja'){
-    backpack();ctx.fillStyle='#151922';ctx.beginPath();ctx.roundRect(-24,-30,48,58,18);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#bfc7ce';ctx.fillRect(-20,-10,40,5);ctx.fillStyle='#f2f6f8';ctx.fillRect(-12,-9,7,5);ctx.fillRect(5,-9,7,5);
-    ctx.fillStyle='#d51f32';ctx.beginPath();ctx.moveTo(-20,7);ctx.lineTo(27,13);ctx.lineTo(17,19);ctx.lineTo(-27,13);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.fillStyle='#c8cfd5';ctx.beginPath();ctx.moveTo(-22,11);ctx.lineTo(-34,2);ctx.lineTo(-29,-4);ctx.lineTo(-17,7);ctx.closePath();ctx.fill();ctx.stroke();
+  // اسکین‌ها فقط جزئیات مخصوص خودشان را روی بدن اضافه می‌کنند.
+  if(sh==='minecraft'){
+    // بدن همان بدن عادی است؛ فقط سر مکعبی شبیه استیو اضافه می‌شود.
+    ctx.fillStyle='#b87952';ctx.strokeStyle='#593b2c';ctx.lineWidth=3;
+    ctx.fillRect(-22,-31,44,24);ctx.strokeRect(-22,-31,44,24);
+    // مو
+    ctx.fillStyle='#4a2f24';ctx.fillRect(-22,-31,44,7);ctx.fillRect(-22,-31,7,14);ctx.fillRect(15,-31,7,10);
+    // صورت استیو
+    ctx.fillStyle='#5b3a2e';ctx.fillRect(-12,-19,6,5);ctx.fillRect(6,-19,6,5);ctx.fillRect(-5,-11,10,3);
   }else if(sh==='crown'){
-    backpack();fillBody('classic');visor();
-    ctx.fillStyle='#ffd52e';ctx.strokeStyle='#8b6100';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-21,-24);ctx.lineTo(-18,-42);ctx.lineTo(-7,-31);ctx.lineTo(0,-45);ctx.lineTo(8,-31);ctx.lineTo(18,-42);ctx.lineTo(21,-24);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.fillStyle='#e21f3d';ctx.beginPath();ctx.arc(0,-34,3,0,Math.PI*2);ctx.fill();
-  }else if(sh==='minecraft'){
-    backpack();fillBody('classic');
-    ctx.fillStyle='#b87952';ctx.strokeStyle='#3d261e';ctx.lineWidth=3;ctx.fillRect(-23,-34,46,26);ctx.strokeRect(-23,-34,46,26);
-    ctx.fillStyle='#4a2f24';ctx.fillRect(-23,-34,46,7);ctx.fillRect(-23,-34,7,15);ctx.fillRect(16,-34,7,11);
-    ctx.fillStyle='#5b3a2e';ctx.fillRect(-12,-22,6,5);ctx.fillRect(6,-22,6,5);ctx.fillRect(-5,-14,10,3);
-    ctx.fillStyle='#fff';ctx.fillRect(-7,-21,3,3);ctx.fillRect(6,-21,3,3);
+    ctx.fillStyle='#ffd84d';ctx.strokeStyle='#9b6d00';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(-27,-25);ctx.lineTo(-23,-43);ctx.lineTo(-10,-32);ctx.lineTo(0,-46);ctx.lineTo(10,-32);ctx.lineTo(23,-43);ctx.lineTo(27,-25);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#ef476f';ctx.beginPath();ctx.arc(0,-36,3,0,Math.PI*2);ctx.fill();
+  }else if(sh==='cat'){
+    ctx.fillStyle=bodyColor;ctx.strokeStyle='rgba(20,40,55,.5)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-22,-17);ctx.lineTo(-24,-34);ctx.lineTo(-10,-25);ctx.quadraticCurveTo(0,-31,10,-25);ctx.lineTo(24,-34);ctx.lineTo(22,-17);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='robot'){
+    ctx.fillStyle='#aebbc4';ctx.strokeStyle='#42515b';ctx.lineWidth=3;
+    ctx.fillRect(-23,-30,46,25);ctx.strokeRect(-23,-30,46,25);
+    ctx.fillStyle='#63d8ff';ctx.fillRect(-13,-21,7,7);ctx.fillRect(6,-21,7,7);
+    ctx.fillStyle='#42515b';ctx.fillRect(-8,-9,16,3);
+    ctx.fillStyle='#e85dff';ctx.fillRect(0,-36,3,6);
+  }else if(sh==='ghost'){
+    ctx.fillStyle='rgba(245,250,255,.9)';ctx.strokeStyle='#a9bfd0';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-23,18);ctx.lineTo(-23,-9);ctx.quadraticCurveTo(-23,-30,0,-30);ctx.quadraticCurveTo(23,-30,23,-9);ctx.lineTo(23,18);ctx.lineTo(12,10);ctx.lineTo(0,18);ctx.lineTo(-12,10);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(sh==='ninja'){
+    // بدن اصلی حفظ می‌شود؛ لباس و ماسک نینجایی روی آن قرار می‌گیرد.
+    ctx.fillStyle='#151923';ctx.fillRect(-22,-26,44,52);
+    ctx.fillStyle='#cfd8dc';ctx.fillRect(-18,-14,36,4);
+    ctx.fillStyle='#e9eef0';ctx.fillRect(-11,-13,6,5);ctx.fillRect(5,-13,6,5);
+    ctx.fillStyle='#d0a15a';ctx.fillRect(-25,17,50,5);
+  }
+
+  // شیشه/چشم اصلی برای اسکین‌هایی که سر جدا ندارند.
+  if(!['minecraft','robot','cat','ghost','ninja'].includes(sh)){
+    ctx.fillStyle='#c9f1ff';ctx.beginPath();ctx.roundRect(-8,-17,25,15,8);ctx.fill();
+    ctx.fillStyle='#16364b';ctx.beginPath();ctx.roundRect(-4,-14,19,9,5);ctx.fill();
   }
 
   ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-51);
-  if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#ff3348':'#55c9ff';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-72)}
+  if(p.id===myId){ctx.strokeStyle='#23384a';ctx.lineWidth=3;ctx.strokeRect(-26,-30,52,60)}
+  if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-72)}
   if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-65)}
   ctx.restore();
 }
 function drawBigMap(){
- if(!bigMap.clientWidth||!bigMap.clientHeight)return;
- const w=bigMap.clientWidth,h=bigMap.clientHeight,dpr=window.devicePixelRatio||1;
- const rw=Math.round(w*dpr),rh=Math.round(h*dpr);
- if(bigMap.width!==rw||bigMap.height!==rh){bigMap.width=rw;bigMap.height=rh;}
- bctx.setTransform(dpr,0,0,dpr,0,0);
+ if(!bigMap.clientWidth)return;
+ const w=bigMap.clientWidth,h=bigMap.clientHeight;
  bctx.clearRect(0,0,w,h);bctx.fillStyle='#dff6ff';bctx.fillRect(0,0,w,h);
  const sx=w/W,sy=h/H;
  rooms.forEach(r=>{
