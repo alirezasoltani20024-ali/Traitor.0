@@ -4,10 +4,10 @@ const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,nam
 const table={x:1200,y:800};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
 const FREE_COLORS=[['قرمز','#e60012'],['آبی','#1264ff'],['سبز','#12b82d'],['زرد','#ffd400'],['نارنجی','#ff6b00'],['صورتی','#ff4bb3'],['بنفش','#6f20c9'],['قهوه‌ای','#6b2f00'],['فیروزه‌ای','#12d5e5'],['فسفری','#39e600'],['مشکی','#111827'],['سفید','#f7f9ff'],['خاکستری','#9ca3af'],['کرمی','#f6df9c'],['زرشکی','#9f0018'],['سرمه‌ای','#0d2a63'],['زیتونی','#617000'],['نیلی تیره','#1e5d60'],['آبی نفتی','#0e7c8f'],['یاسی','#b69af2']];
-const CHARACTER_ART=new Image();CHARACTER_ART.src='assets/characters_reference.png';
-const ART_COLS=[0,1,2,3,4,5,6,7,8,9,11];
-const ART_X=[150,285,410,538,670,800,932,1081,1230,1368,1504,1640,1774];
-const ART_Y=[45,100,139,181,224,261,301,342,382,429,474,522,567,600,640,684,729,767,804,843,887];
+const CHARACTER_ART=new Image();CHARACTER_ART.src='assets/characters_clean_20x11.png';
+const ART_COLS=[0,1,2,3,4,5,6,7,8,9,10];
+const ART_X=Array.from({length:12},(_,i)=>i*96);
+const ART_Y=Array.from({length:21},(_,i)=>i*104);
 const ART_COLOR_INDEX=new Map(FREE_COLORS.map(([,c],i)=>[c.toLowerCase(),i]));
 const FREE_SKINS=[['ساده','classic','🧑‍🚀'],['مربع','square','⬛'],['لوزی','diamond','🔶'],['شش‌ضلعی','hex','⬡'],['گربه','cat','🐱'],['ربات','robot','🤖'],['روح','ghost','👻'],['نینجا','ninja','🥷'],['ستاره','star','⭐'],['تاج','crown','👑'],['ماینکرفتی','minecraft','🟩']];
 function initSkinShop(){const modal=$('skinShop'),colors=$('colorGrid'),grid=$('skinGrid'),open=$('skinShopBtn'),close=$('closeSkinShop');if(!modal||!grid||!colors||!open)return;colors.innerHTML='';grid.innerHTML='';const selectedColor=()=>localStorage.getItem('skinColor')||'#4fc3f7';const selectedShape=()=>localStorage.getItem('skinShape')||'classic';FREE_COLORS.forEach(([name,color])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:60px;background:'+color+';color:#fff;border:3px solid '+(selectedColor()===color?'#111':'#fff');b.textContent='🎨 '+name;b.onclick=()=>{localStorage.setItem('skinColor',color);if(socket.connected)socket.emit('setSkin',{color,shape:selectedShape()});initSkinShop();toast('✅ رنگ '+name+' انتخاب شد')};colors.appendChild(b)});FREE_SKINS.forEach(([name,shape,icon])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:85px;background:#24364a;color:#fff;border:3px solid '+(selectedShape()===shape?'#ffd166':'#ffffff55');b.textContent=icon+' '+name;b.onclick=()=>{localStorage.setItem('skinShape',shape);if(socket.connected)socket.emit('setSkin',{shape,color:selectedColor()});initSkinShop();toast('✅ اسکین '+name+' انتخاب شد')};grid.appendChild(b)});open.onclick=()=>{initSkinShop();modal.classList.remove('hidden')};close.onclick=()=>modal.classList.add('hidden')}
@@ -150,7 +150,7 @@ function drawPlayer(p){
   const colorIndex=ART_COLOR_INDEX.get(String(p.color||'').toLowerCase());
   const row=Number.isInteger(colorIndex)?colorIndex:1;
   const sx=ART_X[artCol], sy=ART_Y[row], sw=ART_X[artCol+1]-sx, sh=ART_Y[row+1]-sy;
-  const dw=72, dh=62;
+  const dw=78, dh=84;
   if(CHARACTER_ART.complete && CHARACTER_ART.naturalWidth){
     ctx.imageSmoothingEnabled=true;
     ctx.drawImage(CHARACTER_ART,sx,sy,sw,sh,-dw/2,-dh/2,dw,dh);
@@ -158,9 +158,9 @@ function drawPlayer(p){
     ctx.fillStyle=p.color||'#4fc3f7';ctx.beginPath();ctx.roundRect(-22,-26,44,52,18);ctx.fill();
   }
 
-  ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-42);
-  if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-63)}
-  if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-56)}
+  ctx.fillStyle='#fff';ctx.font='14px Tahoma';ctx.textAlign='center';ctx.fillText(p.name,0,-54);
+  if(performance.now()<roleTimer&&p.id===myId){ctx.fillStyle=role==='infiltrator'?'#d92742':'#267ee8';ctx.font='bold 22px Tahoma';ctx.fillText(role==='infiltrator'?'خائن':'خدمه',0,-75)}
+  if(role==='infiltrator'&&partners.includes(p.name)&&p.id!==myId){ctx.fillStyle='#e32643';ctx.font='bold 14px Tahoma';ctx.fillText(p.name,0,-68)}
   ctx.restore();
 }
 function drawBigMap(){
