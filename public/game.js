@@ -1,22 +1,21 @@
-const socket=io();const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),bigMap=$('bigMap'),bctx=bigMap.getContext('2d');let myId=null,room='',players=[],me=null,role='crew',partners=[],tasksDone=[],sabotages=[],meeting=null,keys={},joy={x:0,y:0},mapOpen=false,sabotageOpen=false,roleTimer=0;const W=2400,H=1600,vision=9999;
+const socket=io();const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),bigMap=$('bigMap'),bctx=bigMap.getContext('2d');let myId=null,room='',players=[],me=null,role='crew',partners=[],tasksDone=[],sabotages=[],meeting=null,keys={},joy={x:0,y:0},mapOpen=false,sabotageOpen=false,roleTimer=0;const W=2400,H=1600,VIEW_ZOOM=1.35;
 const T=[
-{id:'wires',x:616,y:845,name:'سیم‌کشی برق',room:'برق',kind:'wires'},
-{id:'oxygen',x:616,y:585,name:'رفع نشتی اکسیژن',room:'اکسیژن',kind:'oxygen'},
-{id:'mines',x:1194,y:1326,name:'حدس مین',room:'حدس مین',kind:'mines'},
-{id:'data',x:726,y:338,name:'دریافت فایل',room:'کامپیوتر',kind:'data'},
-{id:'engine',x:616,y:1099,name:'تعمیر موتور',room:'تعمیر موتور',kind:'engine'},
-{id:'cargo',x:1735,y:559,name:'مرتب‌سازی محموله',room:'مرتب‌سازی محموله',kind:'cargo'},
-{id:'mapPuzzle',x:1735,y:312,name:'بازسازی نقشه سفینه',room:'بازسازی نقشه سفینه',kind:'mapPuzzle'},
-{id:'code',x:1735,y:846,name:'وارد کردن رمز',room:'وارد کردن رمز',kind:'code'},
-{id:'panel',x:1748,y:1067,name:'تعمیر پنل',room:'تعمیر پنل',kind:'panel'},
-{id:'gears',x:1722,y:1326,name:'چرخ‌دنده‌ها',room:'چرخ‌دنده‌ها',kind:'gears'}];
-const S=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];const wallRects=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
-const table={x:1200,y:800};
+{id:'wires',x:270,y:640,name:'سیم‌کشی برق',room:'برق',kind:'wires'},
+{id:'oxygen',x:2070,y:250,name:'رفع نشتی اکسیژن',room:'اکسیژن',kind:'oxygen'},
+{id:'mines',x:930,y:1360,name:'حدس مین',room:'حدس مین',kind:'mines'},
+{id:'data',x:350,y:250,name:'دریافت فایل',room:'کامپیوتر',kind:'data'},
+{id:'engine',x:300,y:1000,name:'تعمیر موتور',room:'تعمیر موتور',kind:'engine'},
+{id:'cargo',x:2060,y:650,name:'مرتب‌سازی محموله',room:'مرتب‌سازی محموله',kind:'cargo'},
+{id:'mapPuzzle',x:350,y:1360,name:'بازسازی نقشه سفینه',room:'بازسازی نقشه سفینه',kind:'mapPuzzle'},
+{id:'code',x:2050,y:980,name:'وارد کردن رمز',room:'وارد کردن رمز',kind:'code'},
+{id:'panel',x:1460,y:1360,name:'تعمیر پنل',room:'تعمیر پنل',kind:'panel'},
+{id:'gears',x:2100,y:1360,name:'چرخ‌دنده‌ها',room:'چرخ‌دنده‌ها',kind:'gears'}];
+const S=[{id:'electric',x:280,y:650,name:'برق'},{id:'oxygen',x:2070,y:250,name:'اکسیژن'},{id:'reactorSab',x:1200,y:850,name:'راکتور'}];const wallRects=[];const table={x:1200,y:300};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
 const FREE_COLORS=[['قرمز','#fb041c'],['آبی','#0255fb'],['سبز','#04b137'],['زرد','#faad03'],['صورتی','#f83cb7'],['نارنجی','#ff570b'],['بنفش','#8012f0'],['فیروزه‌ای','#00f7ff'],['قهوه‌ای','#94562f'],['مشکی','#2d3239'],['سفید','#f3f5f9'],['خاکستری','#8b99ab'],['سرمه‌ای','#1439a1'],['فسفری','#9eec0d'],['زرشکی','#ae1936'],['سبزآبی','#00b5c7'],['کرمی','#f3b288'],['یاسی','#9a5bea'],['نعنایی','#83eaa4'],['سبز روشن','#83f2a9']];
 const CHARACTER_ART=new Image();CHARACTER_ART.src='assets/characters_clean_20x11.png';
 const MAP_ART=new Image();MAP_ART.src='assets/map.png';
-const MAP_NATIVE_W=1278,MAP_NATIVE_H=1230;function getMapRect(){const scale=Math.min(W/MAP_NATIVE_W,H/MAP_NATIVE_H);const w=MAP_NATIVE_W*scale,h=MAP_NATIVE_H*scale;return{x:(W-w)/2,y:(H-h)/2,w,h}}
+const MAP_NATIVE_W=1536,MAP_NATIVE_H=1024;function getMapRect(){const scale=Math.min(W/MAP_NATIVE_W,H/MAP_NATIVE_H);const w=MAP_NATIVE_W*scale,h=MAP_NATIVE_H*scale;return{x:(W-w)/2,y:(H-h)/2,w,h}}
 const ART_CELL=120;
 const ART_COLS=Array.from({length:11},(_,i)=>i);
 const ART_X=Array.from({length:11},(_,i)=>i*ART_CELL);
@@ -65,25 +64,17 @@ function move(){if(!me||!me.alive)return;let x=0,y=0;if(keys.w||keys.arrowup)y--
 let drag=false;$('joystick').onpointerdown=e=>{drag=true;$('joystick').setPointerCapture(e.pointerId);jm(e)};$('joystick').onpointermove=e=>drag&&jm(e);$('joystick').onpointerup=()=>{drag=false;joy.x=joy.y=0;$('joy').style.transform='translate(0,0)'};function jm(e){let r=$('joystick').getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,l=Math.hypot(x,y),m=45;if(l>m){x=x/l*m;y=y/l*m}joy.x=x/m;joy.y=y/m;$('joy').style.transform=`translate(${x}px,${y}px)`}
 function near(list,max){if(!me)return null;return list.map(x=>({...x,d:Math.hypot(me.x-x.x,me.y-x.y)})).sort((a,b)=>a.d-b.d)[0]||null}function worldToScreen(x,y,cam){return{x:x-cam.x,y:y-cam.y}}
 function addBtn(text,cls,x,y,fn){const b=document.createElement('button');b.className='context '+cls;b.textContent=text;b.style.left=x+'px';b.style.top=y+'px';b.onclick=fn;$('contextButtons').appendChild(b)}
-function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';return}const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));$('contextButtons').innerHTML='';const task=near(T.filter(t=>!tasksDone.includes(t.id)),120);if(task&&task.d<125){
- const p=worldToScreen(task.x,task.y,{x:camx,y:camy});
- addBtn('🔧 انجام مأموریت','taskAction',p.x+18,p.y-48,()=>showMissionInfo(task));
-}
-const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=worldToScreen(target.x,target.y,{x:camx,y:camy});addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
-const body=near(players.filter(p=>p.corpse),85);if(body&&body.d<75){const p=worldToScreen(body.x,body.y,{x:camx,y:camy});addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
-if(Math.hypot(me.x-table.x,me.y-table.y)<115){const p=worldToScreen(table.x,table.y,{x:camx,y:camy});addBtn('📢 جلسه اضطراری','meetAction',p.x,p.y,()=>socket.emit('emergency'))}
-if(role==='infiltrator'){const st=near(S,130);if(st&&st.d<115){const p=worldToScreen(st.x,st.y,{x:camx,y:camy});addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y,()=>showSabMenu(p.x,p.y))}}
-}
+function screenPos(x,y){return{x:(x-me.x)*VIEW_ZOOM+innerWidth/2,y:(y-me.y)*VIEW_ZOOM+innerHeight/2}}
+function renderContext(){if(!me||!me.alive){$('contextButtons').innerHTML='';return}$('contextButtons').innerHTML='';const task=near(T.filter(t=>!tasksDone.includes(t.id)),120);if(task&&task.d<125){const p=screenPos(task.x,task.y);addBtn('🔧 انجام مأموریت','taskAction',p.x,p.y-48,()=>showMissionInfo(task));}
+const target=near(players.filter(p=>p.id!==myId&&p.alive),60);if(role==='infiltrator'&&target&&target.d<=55){const p=screenPos(target.x,target.y);addBtn('🔪 کشتن','killAction',p.x,p.y,()=>socket.emit('kill',{targetId:target.id}))}
+const body=near(players.filter(p=>p.corpse),85);if(body&&body.d<75){const p=screenPos(body.x,body.y);addBtn('🚨 گزارش جسد','reportAction',p.x,p.y,()=>socket.emit('report'))}
+if(Math.hypot(me.x-table.x,me.y-table.y)<115){const p=screenPos(table.x,table.y);addBtn('📢 جلسه اضطراری','meetAction',p.x,p.y,()=>socket.emit('emergency'))}
+if(role==='infiltrator'){const st=near(S,130);if(st&&st.d<115){const p=screenPos(st.x,st.y);addBtn('⚠️ خرابکاری','sabotageAction',p.x,p.y+45,()=>showSabMenu(p.x,p.y))}}}
 function showSabMenu(x,y){if(sabotageOpen)return;sabotageOpen=true;const wrap=document.createElement('div');wrap.id='sabMenu';wrap.style.cssText=`position:absolute;left:${x}px;top:${y+45}px;z-index:12;background:#fff;border:2px solid #c7dce8;border-radius:12px;padding:6px;box-shadow:0 10px 25px #2345;`;S.forEach(s=>{const b=document.createElement('button');b.textContent='⚡ '+s.name;b.className='sabotageAction';b.onclick=()=>{socket.emit('sabotage',{stationId:s.id});wrap.remove();sabotageOpen=false};wrap.appendChild(b)});$('contextButtons').appendChild(wrap);setTimeout(()=>{if(wrap.isConnected){wrap.remove();sabotageOpen=false}},5000)}
-function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHeight);if(!me)return;const camx=Math.max(0,Math.min(W-innerWidth,me.x-innerWidth/2)),camy=Math.max(0,Math.min(H-innerHeight,me.y-innerHeight/2));ctx.save();ctx.translate(-camx,-camy);ctx.fillStyle='#d7f4ff';ctx.fillRect(0,0,W,H);drawShip();drawSabotages();T.forEach(t=>{
-  if(!tasksDone.includes(t.id)){
-    const pulse=15+Math.sin(performance.now()/180)*4;
-    ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse+8,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=1;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('!',t.x,t.y+5);
-    ctx.restore();
-  }
-});const codeRoom=T.find(t=>t.id==='code');if(codeRoom&&!tasksDone.includes('code')){const clueSpots=[[-95,-42],[-32,-62],[32,-62],[95,-42]];clueSpots.forEach(([dx,dy],i)=>{ctx.save();ctx.translate(codeRoom.x+dx,codeRoom.y+dy);ctx.fillStyle='#cf263f';ctx.strokeStyle='#ff9aaa';ctx.lineWidth=2;ctx.shadowColor='#ff334d';ctx.shadowBlur=12;ctx.fillRect(-18,-14,36,28);ctx.strokeRect(-18,-14,36,28);ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('؟',0,5);ctx.restore()})}players.forEach(p=>{drawPlayer(p)});ctx.restore();if(!window._ctxStamp||performance.now()-window._ctxStamp>100){window._ctxStamp=performance.now();renderContext()}if(mapOpen&&(!window._mapStamp||performance.now()-window._mapStamp>180)){window._mapStamp=performance.now();drawBigMap()}}
+function draw(){requestAnimationFrame(draw);ctx.clearRect(0,0,innerWidth,innerHeight);if(!me)return;ctx.save();ctx.translate(innerWidth/2,innerHeight/2);ctx.scale(VIEW_ZOOM,VIEW_ZOOM);ctx.translate(-me.x,-me.y);ctx.fillStyle='#d7f4ff';ctx.fillRect(0,0,W,H);drawShip();drawSabotages();T.forEach(t=>{
+  if(!tasksDone.includes(t.id)){const pulse=15+Math.sin(performance.now()/180)*4;ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse+8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#e63950';ctx.beginPath();ctx.arc(t.x,t.y,pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('!',t.x,t.y+5);ctx.restore();}});
+const codeRoom=T.find(t=>t.id==='code');if(codeRoom&&!tasksDone.includes('code')){const clueSpots=[[-95,-42],[-32,-62],[32,-62],[95,-42]];clueSpots.forEach(([dx,dy])=>{ctx.save();ctx.translate(codeRoom.x+dx,codeRoom.y+dy);ctx.fillStyle='#cf263f';ctx.strokeStyle='#ff9aaa';ctx.lineWidth=2;ctx.shadowColor='#ff334d';ctx.shadowBlur=12;ctx.fillRect(-18,-14,36,28);ctx.strokeRect(-18,-14,36,28);ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.fillText('؟',0,5);ctx.restore();});}players.forEach(p=>drawPlayer(p));ctx.restore();
+if(!window._ctxStamp||performance.now()-window._ctxStamp>100){window._ctxStamp=performance.now();renderContext()}if(mapOpen&&(!window._mapStamp||performance.now()-window._mapStamp>180)){window._mapStamp=performance.now();drawBigMap()}}
 
 const missionHelp={
 card:["کارت دسترسی","کارت خودت را دو بار به چپ و راست بکش تا دستگاه چهره کارت را شناسایی کند.","وقتی شناسایی شد، روی «دریافت فایل» بزن؛ نوار دریافت ۱۰ ثانیه طول می‌کشد."],
@@ -139,10 +130,8 @@ let lastMinePositions=null;
 function drawShip(){
   ctx.fillStyle='#020914';ctx.fillRect(0,0,W,H);
   if(MAP_ART.complete&&MAP_ART.naturalWidth){
-    const r=getMapRect();
     ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-    ctx.drawImage(MAP_ART,r.x,r.y,r.w,r.h);
-    ctx.restore();
+    ctx.drawImage(MAP_ART,0,0,W,H);ctx.restore();
   }
 }
 function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
