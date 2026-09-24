@@ -7,7 +7,7 @@ const FREE_COLORS=[['قرمز','#e60012'],['آبی','#1264ff'],['سبز','#12b82
 const CHARACTER_ART=new Image();CHARACTER_ART.src='assets/characters_clean_20x11.png';
 const ART_COLS=[0,1,2,3,4,5,6,7,8,9,10];
 const ART_X=Array.from({length:12},(_,i)=>i*96);
-const ART_Y=Array.from({length:21},(_,i)=>i*104);
+const ART_Y=Array.from({length:12},(_,i)=>i*100);
 const ART_COLOR_INDEX=new Map(FREE_COLORS.map(([,c],i)=>[c.toLowerCase(),i]));
 const FREE_SKINS=[['ساده','classic','🧑‍🚀'],['مربع','square','⬛'],['لوزی','diamond','🔶'],['شش‌ضلعی','hex','⬡'],['گربه','cat','🐱'],['ربات','robot','🤖'],['روح','ghost','👻'],['نینجا','ninja','🥷'],['ستاره','star','⭐'],['تاج','crown','👑'],['ماینکرفتی','minecraft','🟩']];
 function initSkinShop(){const modal=$('skinShop'),colors=$('colorGrid'),grid=$('skinGrid'),open=$('skinShopBtn'),close=$('closeSkinShop');if(!modal||!grid||!colors||!open)return;colors.innerHTML='';grid.innerHTML='';const selectedColor=()=>localStorage.getItem('skinColor')||'#4fc3f7';const selectedShape=()=>localStorage.getItem('skinShape')||'classic';FREE_COLORS.forEach(([name,color])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:60px;background:'+color+';color:#fff;border:3px solid '+(selectedColor()===color?'#111':'#fff');b.textContent='🎨 '+name;b.onclick=()=>{localStorage.setItem('skinColor',color);if(socket.connected)socket.emit('setSkin',{color,shape:selectedShape()});initSkinShop();toast('✅ رنگ '+name+' انتخاب شد')};colors.appendChild(b)});FREE_SKINS.forEach(([name,shape,icon])=>{const b=document.createElement('button');b.type='button';b.style.cssText='min-height:85px;background:#24364a;color:#fff;border:3px solid '+(selectedShape()===shape?'#ffd166':'#ffffff55');b.textContent=icon+' '+name;b.onclick=()=>{localStorage.setItem('skinShape',shape);if(socket.connected)socket.emit('setSkin',{shape,color:selectedColor()});initSkinShop();toast('✅ اسکین '+name+' انتخاب شد')};grid.appendChild(b)});open.onclick=()=>{initSkinShop();modal.classList.remove('hidden')};close.onclick=()=>modal.classList.add('hidden')}
@@ -149,7 +149,7 @@ function drawPlayer(p){
   const artCol=ART_COLS[Math.min(shapeIndex,ART_COLS.length-1)];
   const colorIndex=ART_COLOR_INDEX.get(String(p.color||'').toLowerCase());
   const row=Number.isInteger(colorIndex)?colorIndex:1;
-  const sx=ART_X[artCol], sy=ART_Y[row], sw=ART_X[artCol+1]-sx, sh=ART_Y[row+1]-sy;
+  const sx=ART_X[artCol], sy=ART_Y[row], sw=96, sh=100;
   const dw=78, dh=84;
   if(CHARACTER_ART.complete && CHARACTER_ART.naturalWidth){
     ctx.imageSmoothingEnabled=true;
