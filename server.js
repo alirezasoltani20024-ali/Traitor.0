@@ -3,15 +3,21 @@ const app=express(),server=http.createServer(app),io=new Server(server);app.use(
 const rooms=new Map();const colors=['#fb041c','#0255fb','#04b137','#faad03','#f83cb7','#ff570b','#8012f0','#00f7ff','#94562f','#2d3239','#f3f5f9','#8b99ab','#1439a1','#9eec0d','#ae1936','#00b5c7','#f3b288','#9a5bea','#83eaa4','#83f2a9'];
 const shapes=['classic','square','diamond','hex','cat','robot','ghost','ninja','star','crown','minecraft'];
 const tasks=[
-{id:'wires',x:790,y:690,name:'سیم‌کشی برق',room:'برق',kind:'wires'},
-{id:'oxygen',x:2050,y:650,name:'رفع نشتی اکسیژن',room:'اکسیژن',kind:'oxygen'},
-{id:'mines',x:2050,y:290,name:'حدس مین',room:'ارتباطات',kind:'mines'},
-{id:'data',x:1570,y:290,name:'دریافت فایل',room:'ناوبری',kind:'data'}];const stations=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];
+{id:'wires',x:616,y:845,name:'سیم‌کشی برق',room:'برق',kind:'wires'},
+{id:'oxygen',x:616,y:585,name:'رفع نشتی اکسیژن',room:'اکسیژن',kind:'oxygen'},
+{id:'mines',x:1194,y:1326,name:'حدس مین',room:'حدس مین',kind:'mines'},
+{id:'data',x:726,y:338,name:'دریافت فایل',room:'کامپیوتر',kind:'data'},
+{id:'engine',x:616,y:1099,name:'تعمیر موتور',room:'تعمیر موتور',kind:'engine'},
+{id:'cargo',x:1735,y:559,name:'مرتب‌سازی محموله',room:'مرتب‌سازی محموله',kind:'cargo'},
+{id:'mapPuzzle',x:1735,y:312,name:'بازسازی نقشه سفینه',room:'بازسازی نقشه سفینه',kind:'mapPuzzle'},
+{id:'code',x:1735,y:846,name:'وارد کردن رمز',room:'وارد کردن رمز',kind:'code'},
+{id:'panel',x:1748,y:1067,name:'تعمیر پنل',room:'تعمیر پنل',kind:'panel'},
+{id:'gears',x:1722,y:1326,name:'چرخ‌دنده‌ها',room:'چرخ‌دنده‌ها',kind:'gears'}];const stations=[{id:'electric',x:790,y:650,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];
 const walls=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
 const table={x:1200,y:800};
 function code(){let c;do{c=Math.random().toString(36).slice(2,7).toUpperCase()}while(rooms.has(c));return c}function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}function hit(x,y){return walls.some(w=>x+22>w[0]&&x-22<w[0]+w[2]&&y+22>w[1]&&y-22<w[1]+w[3])}
-function pub(p){return{id:p.id,name:p.name,x:p.x,y:p.y,color:p.color,alive:p.alive,corpse:!!p.corpse,shape:p.shape||'classic',claimedRole:p.claimedRole||null}}function send(c){const r=rooms.get(c);if(!r)return;io.to(c).emit('state',{started:r.started,ended:r.ended,winner:r.winner,players:[...r.players.values()].map(pub),tasksDone:[...r.tasksDone],sabotages:r.sabotages,meeting:r.meeting?{phase:r.meeting.phase,endAt:r.meeting.endAt,reason:r.meeting.reason,by:r.meeting.by,votes:r.meeting.phase==='vote'?Object.keys(r.meeting.votes).length:0}:null})}
-function checkWin(r){if(!r.started||r.ended)return;const alive=[...r.players.values()].filter(p=>p.alive),tr=alive.filter(p=>p.role==='infiltrator').length;const allTasksDone=tasks.length===4&&r.tasksDone.size===4&&tasks.every(t=>r.tasksDone.has(t.id));if(allTasksDone||tr===0){r.ended=true;r.winner='crew'}else if(alive.filter(p=>p.role==='crew').length<=tr){r.ended=true;r.winner='infiltrator'}
+function pub(p){const colorIndex=Math.max(0,colors.indexOf(p.color));const shapeIndex=Math.max(0,shapes.indexOf(p.shape||'classic'));return{id:p.id,name:p.name,x:p.x,y:p.y,color:p.color,colorIndex,alive:p.alive,corpse:!!p.corpse,shape:p.shape||'classic',shapeIndex,claimedRole:p.claimedRole||null}}function send(c){const r=rooms.get(c);if(!r)return;io.to(c).emit('state',{started:r.started,ended:r.ended,winner:r.winner,players:[...r.players.values()].map(pub),tasksDone:[...r.tasksDone],sabotages:r.sabotages,meeting:r.meeting?{phase:r.meeting.phase,endAt:r.meeting.endAt,reason:r.meeting.reason,by:r.meeting.by,votes:r.meeting.phase==='vote'?Object.keys(r.meeting.votes).length:0}:null})}
+function checkWin(r){if(!r.started||r.ended)return;const alive=[...r.players.values()].filter(p=>p.alive),tr=alive.filter(p=>p.role==='infiltrator').length;const allTasksDone=r.tasksDone.size===tasks.length&&tasks.every(t=>r.tasksDone.has(t.id));if(allTasksDone||tr===0){r.ended=true;r.winner='crew'}else if(alive.filter(p=>p.role==='crew').length<=tr){r.ended=true;r.winner='infiltrator'}
 if(r.ended){r.meeting=null;io.to(r.code).emit('gameEnded',{winner:r.winner});send(r.code)}}
 function startMeeting(r,by,reason){if(r.meeting||r.ended)return;const spots=[{x:1200,y:690},{x:1290,y:725},{x:1360,y:800},{x:1290,y:875},{x:1200,y:910},{x:1110,y:875},{x:1040,y:800},{x:1110,y:725},{x:1150,y:720},{x:1250,y:720}];let i=0;for(const p of r.players.values()){if(p.alive){const s=spots[i++%spots.length];p.x=s.x;p.y=s.y}}r.meeting={phase:'talk',endAt:Date.now()+30000,by,reason,votes:{}};io.to([...r.players.keys()]).emit('meetingStart',{phase:'talk',endAt:r.meeting.endAt,reason,by});send(r.code)}
 function finishTalk(c){const r=rooms.get(c);if(!r||!r.meeting||r.meeting.phase!=='talk')return;r.meeting.phase='vote';r.meeting.endAt=Date.now()+10000;io.to(c).emit('meetingVote',{endAt:r.meeting.endAt});send(c);setTimeout(()=>finishVote(c),10050)}

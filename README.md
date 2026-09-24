@@ -1,3 +1,8 @@
-Space Mystery Infiltrator - exact user-art clean crops
+# خائن — نسخه V20
 
-Uses the exact user-supplied character image. Each sprite is tightly cropped into a 20-color x 11-skin atlas. No new character art was generated; source pixels are preserved and only tiny detached artifacts are removed.
+این نسخه از V19 ادامه داده شده است.
+
+- نقشه جدید از تصویر ارسالی کاربر استفاده می‌کند.
+- ۱۰ مأموریت: سیم‌کشی برق، اکسیژن، حدس مین، دریافت فایل، تعمیر موتور، مرتب‌سازی محموله، بازسازی نقشه سفینه، وارد کردن رمز، تعمیر پنل، چرخ‌دنده‌ها.
+- مأموریت رمز دارای ۴ سرنخ قرمز در پنجره مأموریت است.
+- شمارش مأموریت‌ها ۱۰تایی است.
