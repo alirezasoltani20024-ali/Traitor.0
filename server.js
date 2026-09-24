@@ -1,6 +1,6 @@
 const express=require('express');const http=require('http');const {Server}=require('socket.io');
 const app=express(),server=http.createServer(app),io=new Server(server);app.use(express.static(__dirname+'/public'));app.get('/health',(q,s)=>s.json({ok:true}));const PORT=process.env.PORT||3000;
-const rooms=new Map();const colors=['#e60012','#1264ff','#12b82d','#ffd400','#ff6b00','#ff4bb3','#6f20c9','#6b2f00','#12d5e5','#39e600','#111827','#f7f9ff','#9ca3af','#f6df9c','#9f0018','#0d2a63','#617000','#1e5d60','#0e7c8f','#b69af2'];
+const rooms=new Map();const colors=['#fb041c','#0255fb','#04b137','#faad03','#f83cb7','#ff570b','#8012f0','#00f7ff','#94562f','#2d3239','#f3f5f9','#8b99ab','#1439a1','#9eec0d','#ae1936','#00b5c7','#f3b288','#9a5bea','#83eaa4','#83f2a9'];
 const shapes=['classic','square','diamond','hex','cat','robot','ghost','ninja','star','crown','minecraft'];
 const tasks=[
 {id:'wires',x:790,y:690,name:'سیم‌کشی برق',room:'برق',kind:'wires'},
