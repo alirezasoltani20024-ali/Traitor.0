@@ -17,7 +17,7 @@ const stations=[{id:'electric',x:280,y:650,name:'برق'},{id:'oxygen',x:2070,y:
 const collision=require('./public/assets/collision_grid.json');
 const GRID_W=collision.width,GRID_H=collision.height,WORLD_W=2400,WORLD_H=1600;
 function solidAt(x,y){const gx=Math.max(0,Math.min(GRID_W-1,Math.floor(x/WORLD_W*GRID_W)));const gy=Math.max(0,Math.min(GRID_H-1,Math.floor(y/WORLD_H*GRID_H)));return collision.grid[gy][gx]==='1';}
-function hit(x,y){const r=24,pts=[[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.72,r*.72],[r*.72,-r*.72],[-r*.72,r*.72],[-r*.72,-r*.72]];return pts.some(([dx,dy])=>solidAt(x+dx,y+dy));}
+function hit(x,y){const r=12,pts=[[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.72,r*.72],[r*.72,-r*.72],[-r*.72,r*.72],[-r*.72,-r*.72]];return pts.some(([dx,dy])=>solidAt(x+dx,y+dy));}
 const table={x:1200,y:300};
 function code(){let c;do{c=Math.random().toString(36).slice(2,7).toUpperCase()}while(rooms.has(c));return c}function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
 function pub(p){const colorIndex=Math.max(0,colors.indexOf(p.color));const shapeIndex=Math.max(0,shapes.indexOf(p.shape||'classic'));return{id:p.id,name:p.name,x:p.x,y:p.y,color:p.color,colorIndex,alive:p.alive,corpse:!!p.corpse,shape:p.shape||'classic',shapeIndex,claimedRole:p.claimedRole||null}}function send(c){const r=rooms.get(c);if(!r)return;io.to(c).emit('state',{started:r.started,ended:r.ended,winner:r.winner,players:[...r.players.values()].map(pub),tasksDone:[...r.tasksDone],sabotages:r.sabotages,meeting:r.meeting?{phase:r.meeting.phase,endAt:r.meeting.endAt,reason:r.meeting.reason,by:r.meeting.by,votes:r.meeting.phase==='vote'?Object.keys(r.meeting.votes).length:0}:null})}
