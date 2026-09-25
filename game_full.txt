@@ -10,9 +10,7 @@ const T=[
 {id:'code',x:2050,y:980,name:'وارد کردن رمز',room:'وارد کردن رمز',kind:'code'},
 {id:'panel',x:1460,y:1360,name:'تعمیر پنل',room:'تعمیر پنل',kind:'panel'},
 {id:'gears',x:2100,y:1360,name:'چرخ‌دنده‌ها',room:'چرخ‌دنده‌ها',kind:'gears'}];
-const S=[{id:'electric',x:790,y:690,name:'برق'},{id:'oxygen',x:2050,y:650,name:'اکسیژن'},{id:'reactorSab',x:350,y:1250,name:'راکتور'}];
-const wallRects=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
-const table={x:1200,y:800};
+const S=[{id:'electric',x:280,y:650,name:'برق'},{id:'oxygen',x:2070,y:250,name:'اکسیژن'},{id:'reactorSab',x:1200,y:850,name:'راکتور'}];const wallRects=[];const table={x:1200,y:300};
 const rooms=[['کافه',180,140,520,350],['برق',700,570,150,430],['موتور',180,1170,520,330],['راکتور',180,1030,520,120],['ناوبری',1700,140,520,350],['ارتباطات',1700,1170,520,330],['درمانگاه',1700,1030,520,120],['انبار',1000,570,400,430],['بال چپ',500,500,500,70],['بال راست',1400,500,500,70]];
 const FREE_COLORS=[['قرمز','#fb041c'],['آبی','#0255fb'],['سبز','#04b137'],['زرد','#faad03'],['صورتی','#f83cb7'],['نارنجی','#ff570b'],['بنفش','#8012f0'],['فیروزه‌ای','#00f7ff'],['قهوه‌ای','#94562f'],['مشکی','#2d3239'],['سفید','#f3f5f9'],['خاکستری','#8b99ab'],['سرمه‌ای','#1439a1'],['فسفری','#9eec0d'],['زرشکی','#ae1936'],['سبزآبی','#00b5c7'],['کرمی','#f3b288'],['یاسی','#9a5bea'],['نعنایی','#83eaa4'],['سبز روشن','#83f2a9']];
 const CHARACTER_ART=new Image();CHARACTER_ART.src='assets/characters_clean_20x11.png';
@@ -130,37 +128,11 @@ function escapeHtml(x){return String(x).replace(/[&<>\"']/g,c=>({'&':'&amp;','<'
 let lastMinePositions=null;
 
 function drawShip(){
-  // نقشه سفید قدیمی بازی؛ دیوارها عمداً ضخیم و خوانا هستند.
-  ctx.fillStyle='#cfeaf3';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#f5fbfd';ctx.strokeStyle='#274b5a';ctx.lineWidth=20;
-  ctx.beginPath();ctx.roundRect(45,45,W-90,H-90,80);ctx.fill();ctx.stroke();
-
-  // راهروهای اصلی
-  ctx.fillStyle='#d8e9ee';ctx.fillRect(700,520,1000,500);
-  ctx.fillRect(850,250,700,100);ctx.fillRect(850,1250,700,100);
-  ctx.strokeStyle='#52717d';ctx.lineWidth=14;
-  ctx.strokeRect(700,520,1000,500);
-  ctx.strokeRect(850,250,700,100);ctx.strokeRect(850,1250,700,100);
-
-  rooms.forEach(r=>{
-    ctx.fillStyle='#ffffff';ctx.strokeStyle='#203f4b';ctx.lineWidth=14;
-    ctx.beginPath();ctx.roundRect(r[1],r[2],r[3],r[4],28);ctx.fill();ctx.stroke();
-  });
-
-  // درها: فاصله های باز بین دیوارها عمداً دست نخورده مانده‌اند.
-  const doors=[[700,700,0,90],[700,900,0,90],[1700,700,0,90],[1700,900,0,90],
-               [1050,350,90,0],[1350,350,90,0],[1050,1250,90,0],[1350,1250,90,0]];
-  ctx.fillStyle='#72b8c9';doors.forEach(d=>{
-    if(d[2])ctx.fillRect(d[0],d[1],d[2],12);else ctx.fillRect(d[0],d[1],12,d[3]);
-  });
-
-  // دیوارهای ضخیم واقعی که با برخورد سرور هماهنگ هستند.
-  ctx.save();ctx.fillStyle='rgba(0,0,0,.92)';wallRects.forEach(w=>ctx.fillRect(w[0],w[1],w[2],w[3]));ctx.restore();
-
-  // میز جلسه در نقشه سفید قدیمی، وسط سالن بالا/مرکزی.
-  ctx.fillStyle='#536c78';ctx.beginPath();ctx.arc(table.x,table.y,70,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.arc(table.x,table.y,47,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font='bold 15px Tahoma';ctx.textAlign='center';ctx.fillText('میز جلسه',table.x,table.y+5);
+  ctx.fillStyle='#020914';ctx.fillRect(0,0,W,H);
+  if(MAP_ART.complete&&MAP_ART.naturalWidth){
+    ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(MAP_ART,0,0,W,H);ctx.restore();
+  }
 }
 function drawSabotages(){sabotages.forEach(s=>{ctx.fillStyle='#e33e52';ctx.beginPath();ctx.arc(s.x||0,s.y||0,28,0,7);ctx.fill()})}
 function drawPlayer(p){
@@ -214,35 +186,12 @@ function drawBigMap(){
  const w=bigMap.clientWidth,h=bigMap.clientHeight,dpr=window.devicePixelRatio||1;
  const rw=Math.round(w*dpr),rh=Math.round(h*dpr);
  if(bigMap.width!==rw||bigMap.height!==rh){bigMap.width=rw;bigMap.height=rh;}
- bctx.setTransform(dpr,0,0,dpr,0,0);
- bctx.clearRect(0,0,w,h);bctx.fillStyle='#dff6ff';bctx.fillRect(0,0,w,h);
- const sx=w/W,sy=h/H;
- // بدنه و راهروهای نقشه قدیمی
- bctx.fillStyle='#f5fbfd';bctx.strokeStyle='#274b5a';bctx.lineWidth=6;
- bctx.beginPath();bctx.roundRect(45*sx,45*sy,(W-90)*sx,(H-90)*sy,18);bctx.fill();bctx.stroke();
- bctx.fillStyle='#d8e9ee';bctx.fillRect(700*sx,520*sy,1000*sx,500*sy);
- bctx.fillRect(850*sx,250*sy,700*sx,100*sy);bctx.fillRect(850*sx,1250*sy,700*sx,100*sy);
- rooms.forEach(r=>{
-   bctx.fillStyle='#fff';bctx.strokeStyle='#294c59';bctx.lineWidth=4;
-   bctx.beginPath();bctx.roundRect(r[1]*sx,r[2]*sy,r[3]*sx,r[4]*sy,8);bctx.fill();bctx.stroke();
-   bctx.fillStyle='#365c68';bctx.font='bold 10px Tahoma';bctx.textAlign='center';
-   bctx.fillText(r[0],(r[1]+r[3]/2)*sx,(r[2]+18)*sy);
- });
- // دیوارهای ضخیم روی نقشه کوچک
- bctx.fillStyle='rgba(0,0,0,.92)';wallRects.forEach(wr=>bctx.fillRect(wr[0]*sx,wr[1]*sy,wr[2]*sx,wr[3]*sy));
- // میز جلسه
- bctx.fillStyle='#536c78';bctx.beginPath();bctx.arc(table.x*sx,table.y*sy,70*Math.min(sx,sy),0,Math.PI*2);bctx.fill();
- bctx.fillStyle='#ffd34d';bctx.beginPath();bctx.arc(table.x*sx,table.y*sy,47*Math.min(sx,sy),0,Math.PI*2);bctx.fill();
- T.forEach(t=>{
-   if(!tasksDone.includes(t.id)){
-     const pulse=8+Math.sin(performance.now()/180)*2;
-     bctx.fillStyle='#e63950';bctx.beginPath();bctx.arc(t.x*sx,t.y*sy,pulse+3,0,Math.PI*2);bctx.fill();
-     bctx.fillStyle='#fff';bctx.font='bold 9px Arial';bctx.fillText('!',t.x*sx,t.y*sy+3);
-   }
- });
- if(me){
-   bctx.fillStyle=me.color;bctx.beginPath();bctx.arc(me.x*sx,me.y*sy,8,0,Math.PI*2);bctx.fill();
-   bctx.strokeStyle='#163b49';bctx.lineWidth=2;bctx.stroke();
+ bctx.setTransform(dpr,0,0,dpr,0,0);bctx.clearRect(0,0,w,h);bctx.fillStyle='#020914';bctx.fillRect(0,0,w,h);
+ if(MAP_ART.complete&&MAP_ART.naturalWidth){const scale=Math.min(w/MAP_NATIVE_W,h/MAP_NATIVE_H),mw=MAP_NATIVE_W*scale,mh=MAP_NATIVE_H*scale,mx=(w-mw)/2,my=(h-mh)/2;bctx.imageSmoothingEnabled=true;bctx.imageSmoothingQuality='high';bctx.drawImage(MAP_ART,mx,my,mw,mh);
+  const sx=mw/W,sy=mh/H,ox=mx/sx,oy=my/sy;
+  T.forEach(t=>{if(!tasksDone.includes(t.id)){const pulse=8+Math.sin(performance.now()/180)*2;const tx=(t.x*sx)+mx,ty=(t.y*sy)+my;bctx.fillStyle='#e63950';bctx.beginPath();bctx.arc(tx,ty,pulse+3,0,Math.PI*2);bctx.fill();bctx.fillStyle='#fff';bctx.font='bold 9px Arial';bctx.textAlign='center';bctx.fillText('!',tx,ty+3)}});
+  if(me){const px=me.x*sx+mx,py=me.y*sy+my;bctx.fillStyle=me.color||'#fb041c';bctx.beginPath();bctx.arc(px,py,8,0,Math.PI*2);bctx.fill();bctx.strokeStyle='#102331';bctx.lineWidth=2;bctx.stroke()}
  }
 }
+
 function loopRole(){if(roleTimer&&performance.now()>roleTimer)roleTimer=0;requestAnimationFrame(loopRole)}loopRole();draw();const q=new URLSearchParams(location.search).get('room');if(q)$('code').value=q.toUpperCase();

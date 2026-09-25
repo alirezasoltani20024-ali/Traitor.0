@@ -14,14 +14,12 @@ const tasks=[
 {id:'panel',x:1460,y:1360,name:'تعمیر پنل',room:'تعمیر پنل',kind:'panel'},
 {id:'gears',x:2100,y:1360,name:'چرخ‌دنده‌ها',room:'چرخ‌دنده‌ها',kind:'gears'}];
 const stations=[{id:'electric',x:280,y:650,name:'برق'},{id:'oxygen',x:2070,y:250,name:'اکسیژن'},{id:'reactorSab',x:1200,y:850,name:'راکتور'}];
-const collision=require('./public/assets/collision_grid.json');
-const GRID_W=collision.width,GRID_H=collision.height,WORLD_W=2400,WORLD_H=1600;
-function solidAt(x,y){const gx=Math.max(0,Math.min(GRID_W-1,Math.floor(x/WORLD_W*GRID_W)));const gy=Math.max(0,Math.min(GRID_H-1,Math.floor(y/WORLD_H*GRID_H)));return collision.grid[gy][gx]==='1';}
-function hit(x,y){const r=8,pts=[[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.72,r*.72],[r*.72,-r*.72],[-r*.72,r*.72],[-r*.72,-r*.72]];return pts.some(([dx,dy])=>solidAt(x+dx,y+dy));}
-const table={x:1200,y:300};
+const walls=[[0,0,2400,45],[0,1555,2400,45],[0,0,45,1600],[2355,0,45,1600],[180,140,520,55],[180,140,55,350],[645,140,55,350],[1700,140,520,55],[1700,140,55,350],[2165,140,55,350],[180,1170,520,55],[180,1170,55,330],[645,1170,55,330],[1700,1170,520,55],[1700,1170,55,330],[2165,1170,55,330],[850,140,55,220],[850,455,55,430],[850,975,55,220],[1495,140,55,220],[1495,455,55,430],[1495,975,55,220],[700,570,150,55],[1550,570,150,55],[700,975,150,55],[1550,975,150,55],[1030,140,55,120],[1315,140,55,120],[1030,1180,55,265],[1315,1180,55,265]];
+function hit(x,y){const r=22;return walls.some(w=>x+r>w[0]&&x-r<w[0]+w[2]&&y+r>w[1]&&y-r<w[1]+w[3]);}
+const table={x:1200,y:800};
 const spawnPoints=[
-  {x:1200,y:180},{x:1150,y:180},{x:1250,y:180},{x:1100,y:150},{x:1300,y:150},
-  {x:1050,y:180},{x:1350,y:180},{x:1200,y:220},{x:1150,y:240},{x:1250,y:240}
+  {x:1100,y:700},{x:1200,y:700},{x:1300,y:700},{x:1100,y:900},{x:1200,y:900},
+  {x:1300,y:900},{x:1050,y:800},{x:1350,y:800},{x:1150,y:650},{x:1250,y:650}
 ];
 function safeSpawn(i=0){
   const start=spawnPoints[i%spawnPoints.length];
@@ -35,7 +33,7 @@ function code(){let c;do{c=Math.random().toString(36).slice(2,7).toUpperCase()}w
 function pub(p){const colorIndex=Math.max(0,colors.indexOf(p.color));const shapeIndex=Math.max(0,shapes.indexOf(p.shape||'classic'));return{id:p.id,name:p.name,x:p.x,y:p.y,color:p.color,colorIndex,alive:p.alive,corpse:!!p.corpse,shape:p.shape||'classic',shapeIndex,claimedRole:p.claimedRole||null}}function send(c){const r=rooms.get(c);if(!r)return;io.to(c).emit('state',{started:r.started,ended:r.ended,winner:r.winner,players:[...r.players.values()].map(pub),tasksDone:[...r.tasksDone],sabotages:r.sabotages,meeting:r.meeting?{phase:r.meeting.phase,endAt:r.meeting.endAt,reason:r.meeting.reason,by:r.meeting.by,votes:r.meeting.phase==='vote'?Object.keys(r.meeting.votes).length:0}:null})}
 function checkWin(r){if(!r.started||r.ended)return;const alive=[...r.players.values()].filter(p=>p.alive),tr=alive.filter(p=>p.role==='infiltrator').length;const allTasksDone=r.tasksDone.size===tasks.length&&tasks.every(t=>r.tasksDone.has(t.id));if(allTasksDone||tr===0){r.ended=true;r.winner='crew'}else if(alive.filter(p=>p.role==='crew').length<=tr){r.ended=true;r.winner='infiltrator'}
 if(r.ended){r.meeting=null;io.to(r.code).emit('gameEnded',{winner:r.winner});send(r.code)}}
-function startMeeting(r,by,reason){if(r.meeting||r.ended)return;const spots=[{x:1200,y:365},{x:1270,y:345},{x:1330,y:305},{x:1310,y:250},{x:1240,y:220},{x:1160,y:220},{x:1085,y:250},{x:1070,y:305},{x:1130,y:345},{x:1200,y:385}];let i=0;for(const p of r.players.values()){if(p.alive){const s=spots[i++%spots.length];p.x=s.x;p.y=s.y}}r.meeting={phase:'talk',endAt:Date.now()+30000,by,reason,votes:{}};io.to([...r.players.keys()]).emit('meetingStart',{phase:'talk',endAt:r.meeting.endAt,reason,by});send(r.code)}
+function startMeeting(r,by,reason){if(r.meeting||r.ended)return;const spots=[{x:1200,y:690},{x:1290,y:725},{x:1360,y:800},{x:1290,y:875},{x:1200,y:910},{x:1110,y:875},{x:1040,y:800},{x:1110,y:725},{x:1150,y:720},{x:1250,y:720}];let i=0;for(const p of r.players.values()){if(p.alive){const s=spots[i++%spots.length];p.x=s.x;p.y=s.y}}r.meeting={phase:'talk',endAt:Date.now()+30000,by,reason,votes:{}};io.to([...r.players.keys()]).emit('meetingStart',{phase:'talk',endAt:r.meeting.endAt,reason,by});send(r.code)}
 function finishTalk(c){const r=rooms.get(c);if(!r||!r.meeting||r.meeting.phase!=='talk')return;r.meeting.phase='vote';r.meeting.endAt=Date.now()+10000;io.to(c).emit('meetingVote',{endAt:r.meeting.endAt});send(c);setTimeout(()=>finishVote(c),10050)}
 function finishVote(c){const r=rooms.get(c);if(!r||!r.meeting)return;const counts={};for(const id of Object.values(r.meeting.votes))counts[id]=(counts[id]||0)+1;let top=null,max=0,tie=false;for(const [id,n] of Object.entries(counts)){if(n>max){top=id;max=n;tie=false}else if(n===max&&n>0){tie=true}}let result='هیچ‌کس اخراج نشد';if(top&&!tie){const p=r.players.get(top);if(p){p.alive=false;result=`${p.name} با ${max} رأی اخراج شد — نقش: ${p.role==='infiltrator'?'خائن':'خدمه'}`}}else if(tie)result='رأی‌ها مساوی شد؛ کسی اخراج نشد';r.meeting={phase:'result',endAt:Date.now()+6500,reason:r.meeting.reason,by:r.meeting.by,votes:r.meeting.votes,result};io.to(c).emit('meetingResult',{result,votes:r.meeting.votes,players:[...r.players.values()].map(pub)});checkWin(r);send(c);setTimeout(()=>{if(rooms.has(c)){r.meeting=null;send(c)}},6600)}
 setInterval(()=>{for(const [c,r] of rooms){if(r.meeting&&Date.now()>=r.meeting.endAt&&r.meeting.phase==='talk')finishTalk(c);for(const s of r.sabotages){if(s.until<Date.now())r.sabotages=r.sabotages.filter(x=>x!==s)}}},1000);
